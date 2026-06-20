@@ -1,5 +1,5 @@
 {
-  "name": "@olegpolyakov/tasks-web-api",
+  "name": "@olegpolyakov/tasks-backend",
   "version": "1.0.0",
   "type": "module",
   "author": "Oleg Poliakov <olegpoliakov@outlook.com>",
@@ -10,10 +10,10 @@
     "lint": "eslint ./src"
   },
   "dependencies": {
-    "@olegpolyakov/backend": "^0.4.1",
+    "@olegpolyakov/backend": "^0.6.0",
     "@olegpolyakov/db": "^0.4.0",
-    "@olegpolyakov/tasks-core": "^0.1.0",
-    "@olegpolyakov/tasks-db": "^0.1.0",
+    "@olegpolyakov/tasks-core": "^0.2.0",
+    "@olegpolyakov/tasks-db": "^0.2.0",
     "express": "^5.2.1",
     "tsx": "^4.21.0"
   },
