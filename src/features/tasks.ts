@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Request, Router } from 'express';
 
 import type Context from '@/context.ts';
 
@@ -24,28 +24,14 @@ export default ({
     });
 
     router.post('/', async (req, res) => {
-        const { title, tagIds } = req.body;
-
-        const task = await Task.create({
-            title,
-            completed: false,
-            tagIds
-        });
+        const userId = (req as Request & { userId: string }).userId;
+        const task = await Task.create({ ...req.body, userId });
 
         res.status(201).json(task);
     });
 
     router.put('/:id', async (req, res) => {
-        const { title, content, completed, dueDate, priority, tagIds } = req.body;
-
-        const task = await Task.findByIdAndUpdate(req.params.id, {
-            title,
-            completed,
-            content,
-            dueDate,
-            priority,
-            tagIds
-        }, { new: true }).populate('tags');
+        const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('tags');
 
         res.status(200).json(task);
     });

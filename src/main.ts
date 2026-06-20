@@ -9,7 +9,8 @@ const {
     HOST = 'localhost',
     PORT = 3000,
     DB_CONNECTION_STRING = '',
-    JWT_SECRET = 'tasks-jwt-secret'
+    COOKIE_SECRET = 'cookie-secret',
+    JWT_SECRET = 'jwt-secret'
 } = process.env;
 
 const tasksDb = TasksDb(DB_CONNECTION_STRING, { debug: true });
@@ -23,12 +24,11 @@ const context: Context = {
 Server({
     host: HOST,
     port: PORT,
-    cookies: true,
-    json: true,
-    cors: {
-        origin: /^http:\/\/localhost:\d+$/,
-        credentials: true
-    }
+    cookies: {
+        secret: COOKIE_SECRET
+    },
+    cors: true,
+    json: true
 })
     .use(authorize({ jwtSecret: JWT_SECRET }))
     .use('/api', Router(context))
