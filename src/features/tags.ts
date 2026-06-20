@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Request, Router } from 'express';
 
 import type Context from '@/context.ts';
 
@@ -20,20 +20,14 @@ export default ({
     });
 
     router.post('/', async (req, res) => {
-        const { id, name, icon } = req.body;
-
-        const tag = await Tag.create({ id, name, icon });
+        const userId = (req as Request & { userId: string }).userId;
+        const tag = await Tag.create({ ...req.body, userId });
 
         res.status(201).json(tag);
     });
 
     router.put('/:id', async (req, res) => {
-        const { name, icon } = req.body;
-
-        const tag = await Tag.findByIdAndUpdate(req.params.id, {
-            name,
-            icon
-        }, { new: true });
+        const tag = await Tag.findByIdAndUpdate(req.params.id, req.body, { new: true });
 
         res.status(200).json(tag);
     });

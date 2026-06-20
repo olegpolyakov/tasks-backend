@@ -31,7 +31,8 @@ export default ({
     });
 
     router.put('/:id', async (req, res) => {
-        const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true }).populate('tags');
+        const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true })
+            .populate('tags');
 
         res.status(200).json(task);
     });
