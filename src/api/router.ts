@@ -1,6 +1,6 @@
 import { Router } from 'express';
 
-import settings from '@olegpolyakov/backend/features/settings';
+import { router as settings } from '@olegpolyakov/backend/features/settings';
 
 import type Context from '../context.ts';
 

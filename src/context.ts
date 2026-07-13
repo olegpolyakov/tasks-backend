@@ -1,4 +1,4 @@
-import { Models } from '@olegpolyakov/tasks-db';
+import { Models } from './db/index.ts';
 
 export type Context = {
     models: Models;

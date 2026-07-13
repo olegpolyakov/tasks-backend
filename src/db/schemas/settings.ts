@@ -1,5 +1,5 @@
-import { createSettingsSchema } from '@olegpolyakov/db/schemas/settings';
 import type { TasksSettings } from '@olegpolyakov/tasks-core';
+import { createSettingsSchema } from '@olegpolyakov/backend/features/settings';
 
 export default createSettingsSchema<TasksSettings>({
     listsOrder: { type: [String], default: [] },
