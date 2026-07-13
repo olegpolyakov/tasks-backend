@@ -1,9 +1,9 @@
-import TasksDb from '@olegpolyakov/tasks-db';
 import { authorize } from '@olegpolyakov/backend/features/auth';
 import Server from '@olegpolyakov/backend/server';
 
+import Api from './api/index.ts';
+import Db from './db/index.ts';
 import type Context from './context.ts';
-import Router from './router.ts';
 
 const {
     HOST = 'localhost',
@@ -13,12 +13,12 @@ const {
     JWT_SECRET = 'jwt-secret'
 } = process.env;
 
-const tasksDb = TasksDb(DB_CONNECTION_STRING, { debug: true });
+const db = Db(DB_CONNECTION_STRING, { debug: true });
 
-await tasksDb.connect();
+await db.connect();
 
 const context: Context = {
-    models: tasksDb.models
+    models: db.models
 };
 
 Server({
@@ -31,7 +31,7 @@ Server({
     json: true
 })
     .use(authorize({ jwtSecret: JWT_SECRET }))
-    .use('/api', Router(context))
+    .use('/api', Api(context))
     .start(() => {
         console.info(`Server is running on ${HOST}:${PORT}`);
     });

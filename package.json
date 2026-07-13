@@ -12,9 +12,9 @@
   "dependencies": {
     "@olegpolyakov/backend": "^0.6.0",
     "@olegpolyakov/db": "^0.4.0",
-    "@olegpolyakov/tasks-core": "^0.2.0",
-    "@olegpolyakov/tasks-db": "^0.2.0",
+    "@olegpolyakov/tasks-core": "^0.3.0",
     "express": "^5.2.1",
+    "mongoose": "^9.3.3",
     "tsx": "^4.21.0"
   },
   "devDependencies": {
