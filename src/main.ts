@@ -4,6 +4,7 @@ import Server from '@olegpolyakov/backend/server';
 import Ai from './ai/index.ts';
 import Api from './api/index.ts';
 import Db from './db/index.ts';
+import Mcp from './mcp/index.ts';
 import type Context from './context.ts';
 
 const {
@@ -38,6 +39,7 @@ Server({
     .use(auth({ jwtSecret: JWT_SECRET }))
     .use('/ai', Ai(context))
     .use('/api', Api(context))
+    .use('/mcp', Mcp(context))
     .start(() => {
         console.info(`Server is running on ${HOST}:${PORT}`);
     });
