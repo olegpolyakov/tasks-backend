@@ -1,4 +1,4 @@
-import { authorize } from '@olegpolyakov/backend/features/auth';
+import { auth } from '@olegpolyakov/backend/features/auth';
 import Server from '@olegpolyakov/backend/server';
 
 import Ai from './ai/index.ts';
@@ -35,6 +35,7 @@ Server({
     cors: true,
     json: true
 })
+    .use(auth({ jwtSecret: JWT_SECRET }))
     .use('/ai', Ai(context))
     .use('/api', Api(context))
     .start(() => {
