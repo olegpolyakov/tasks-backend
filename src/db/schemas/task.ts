@@ -1,13 +1,14 @@
 import { Schema } from 'mongoose';
 
 import { RecurrenceFrequency } from '@olegpolyakov/core';
-import { Task, TaskPriority } from '@olegpolyakov/tasks-core';
+import { Task } from '@olegpolyakov/tasks-core';
 
 const TaskSchema = new Schema<Task>({
     title: { type: String, required: true },
     completed: { type: Boolean, default: false },
-    content: { type: String },
+    important: { type: Boolean, default: false },
     dueDate: { type: Date },
+    content: { type: String },
     recurrence: {
         type: {
             frequency: {
@@ -23,15 +24,6 @@ const TaskSchema = new Schema<Task>({
             values: { type: [Number] }
         },
         default: undefined
-    },
-    priority: {
-        type: Number,
-        enum: [
-            TaskPriority.Low,
-            TaskPriority.Medium,
-            TaskPriority.High
-        ],
-        default: TaskPriority.Medium
     },
     tagIds: { type: [String], default: [] },
     childrenIds: { type: [String] },
