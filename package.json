@@ -12,15 +12,18 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@olegpolyakov/backend": "^0.9.0",
+    "@olegpolyakov/backend": "^0.10.1",
     "@olegpolyakov/db": "^0.5.0",
-    "@olegpolyakov/tasks-core": "^0.4.0",
+    "@olegpolyakov/tasks-core": "^0.5.0",
+    "@types/ws": "^8.18.1",
     "express": "^5.2.1",
     "mongoose": "^9.3.3",
     "ollama": "^0.6.3",
-    "tsx": "^4.21.0"
+    "tsx": "^4.21.0",
+    "ws": "^8.21.1"
   },
   "devDependencies": {
+    "@olegpolyakov/tasks-core": "file://../core",
     "@types/express": "^5.0.6",
     "@types/node": "^26.0.0",
     "@types/supertest": "^7.2.1",
