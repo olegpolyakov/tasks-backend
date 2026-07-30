@@ -12,7 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@olegpolyakov/backend": "^0.10.1",
+    "@olegpolyakov/backend": "^0.14.0",
     "@olegpolyakov/db": "^0.5.0",
     "@olegpolyakov/tasks-core": "^0.7.0",
     "@types/ws": "^8.18.1",
@@ -23,7 +23,6 @@
     "ws": "^8.21.1"
   },
   "devDependencies": {
-    "@olegpolyakov/tasks-core": "file://../core",
     "@types/express": "^5.0.6",
     "@types/node": "^26.0.0",
     "@types/supertest": "^7.2.1",
