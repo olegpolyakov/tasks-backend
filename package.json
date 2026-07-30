@@ -14,7 +14,7 @@
   "dependencies": {
     "@olegpolyakov/backend": "^0.10.1",
     "@olegpolyakov/db": "^0.5.0",
-    "@olegpolyakov/tasks-core": "^0.5.0",
+    "@olegpolyakov/tasks-core": "^0.7.0",
     "@types/ws": "^8.18.1",
     "express": "^5.2.1",
     "mongoose": "^9.3.3",
