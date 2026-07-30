@@ -9,6 +9,7 @@ import type Context from './context.ts';
 import Ws from './ws.ts';
 
 const {
+    DOMAIN = '',
     HOST = 'localhost',
     PORT = 3000,
     DB_CONNECTION_STRING = '',
@@ -34,7 +35,9 @@ Server({
     cookies: {
         secret: COOKIE_SECRET
     },
-    cors: true,
+    cors: {
+        domain: DOMAIN
+    },
     json: true
 })
     .use(auth({ jwtSecret: JWT_SECRET }))
