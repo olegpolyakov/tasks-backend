@@ -18,7 +18,7 @@ export default ({
     });
     
     router.get('/', async (req, res) => {
-        const tasks = await Task.find().populate('tags');
+        const tasks = await Task.find();
 
         res.status(200).json(tasks);
     });

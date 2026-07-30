@@ -6,6 +6,7 @@ import { Task } from '@olegpolyakov/tasks-core';
 const TaskSchema = new Schema<Task>({
     title: { type: String, required: true },
     completed: { type: Boolean, default: false },
+    active: { type: Boolean, default: false },
     important: { type: Boolean, default: false },
     dueDate: { type: Date },
     content: { type: String },
@@ -36,6 +37,15 @@ TaskSchema.virtual('tags', {
     ref: 'Tag',
     localField: 'tagIds',
     foreignField: '_id'
+});
+
+TaskSchema.virtual('projects', {
+    ref: 'Project',
+    localField: '_id',
+    foreignField: 'taskIds',
+    options: {
+        projection: 'name'
+    }
 });
 
 export default TaskSchema;
