@@ -2,7 +2,7 @@ import type { TaskData } from '@olegpolyakov/tasks-core';
 
 import type Context from '@/context.ts';
 
-import { createTool, type Slice } from './lib.ts';
+import { createPrompt, createTool, type Slice } from '../lib.ts';
 
 export default ({ models: { Task } }: Context) => (userId: string): Slice => ({
     async list() {
@@ -22,6 +22,7 @@ export default ({ models: { Task } }: Context) => (userId: string): Slice => ({
 
         return task.toJSON();
     },
+    
     tools: [
         createTool(
             'createTask',
@@ -66,21 +67,20 @@ export default ({ models: { Task } }: Context) => (userId: string): Slice => ({
             }
         )
     ],
+
     prompts: [
-        {
-            name: 'taskDescription',
-            description: 'Generate a task description template',
-            arguments: [{ name: 'topic', type: 'string' }],
-            get: (args: Record<string, unknown>) => {
-                return {
-                    messages: [
-                        {
-                            role: 'user',
-                            content: `Create a todo related to ${args.topic}`
-                        }
-                    ]
-                };
-            }
-        }
+        createPrompt(
+            'taskDescription',
+            'Generate a task description template',
+            [{ name: 'topic', type: 'string' }],
+            args => ({
+                messages: [
+                    {
+                        role: 'user',
+                        content: `Create a todo related to ${args.topic}`
+                    }
+                ]
+            })
+        )
     ]
 });

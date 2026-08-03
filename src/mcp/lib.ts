@@ -50,6 +50,20 @@ export function createTool<T, R>(
     };
 }
 
+export function createPrompt(
+    name: string,
+    description: string,
+    args: { name: string; type: string }[],
+    get: (args: Record<string, unknown>) => { messages: Message[] }
+) {
+    return {
+        name,
+        description,
+        arguments: args,
+        get
+    };
+}
+
 export default (slices: Record<string, (userId: string) => Slice>, userId: string) => {
     const tools = Object.values(slices)
         .flatMap(s => s(userId).tools);
