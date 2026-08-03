@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 
 import { Router } from 'express';
 
+import { getUserId } from '@olegpolyakov/backend/features/auth';
+
 import type Context from '@/context.ts';
 
 export default ({
@@ -10,7 +12,8 @@ export default ({
     const router = Router();
 
     router.param('id', async (req, res, next, id) => {
-        const project = await Project.findById(id, { _id: true });
+        const userId = getUserId(req);
+        const project = await Project.findOne({ _id: id, userId }, { _id: true });
 
         if (!project) {
             return res.status(404).json({ message: 'Project not found' });
@@ -20,34 +23,50 @@ export default ({
     });
 
     router.get('/', async (req, res) => {
-        const projects = await Project.find();
+        const userId = getUserId(req);
+        const projects = await Project.find({ userId });
 
         res.status(200).json(projects);
     });
 
     router.get('/:id', async (req, res) => {
-        const project = await Project.findById(req.params.id);
+        const userId = getUserId(req);
+        const project = await Project.findOne({ _id: req.params.id, userId });
 
         res.status(200).json(project);
     });
 
     router.post('/', async (req, res) => {
-        const project = await Project.create(req.body);
+        const userId = getUserId(req);
+        const project = await Project.create({ ...req.body, userId });
 
         res.status(201).json(project);
     });
 
     router.put('/:id', async (req, res) => {
-        const project = await Project.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
+        const userId = getUserId(req);
+        const project = await Project.findOneAndUpdate({ _id: req.params.id, userId }, req.body, { returnDocument: 'after' });
 
         res.status(200).json(project);
     });
 
     router.delete('/:id', async (req, res) => {
-        await Project.deleteOne({ _id: req.params.id });
+        const userId = getUserId(req);
+        const project = await Project.findOneAndDelete({ _id: req.params.id, userId });
+
+        if (!project) {
+            return res.status(404).json({ message: 'Project not found' });
+        }
 
         if (req.body.deleteTasks) {
-            await Task.deleteMany({ projectIds: req.params.id });
+            const taskIds = [
+                ...project.taskIds,
+                ...Object.values(project.sectionData).flatMap(section => section.taskIds)
+            ];
+
+            if (taskIds.length > 0) {
+                await Task.deleteMany({ _id: { $in: taskIds }, userId });
+            }
         }
 
         res.status(204).send({ id: req.params.id });
@@ -56,7 +75,8 @@ export default ({
     // Tasks
 
     router.get('/:id/tasks', async (req, res) => {
-        const project = await Project.findById(req.params.id, { taskIds: true, sectionData: true });
+        const userId = getUserId(req);
+        const project = await Project.findOne({ _id: req.params.id, userId }, { taskIds: true, sectionData: true });
 
         if (!project) throw new Error('Project is not found');
 
@@ -73,10 +93,11 @@ export default ({
     // Sections
 
     router.post('/:id/sections', async (req, res) => {
+        const userId = getUserId(req);
         const { name } = req.body;
 
         const sectionId = randomUUID();
-        const project = await Project.findByIdAndUpdate(req.params.id, {
+        const project = await Project.findOneAndUpdate({ _id: req.params.id, userId }, {
             $push: { sectionIds: sectionId },
             $set: {
                 [`sectionData.${sectionId}`]: {
@@ -96,9 +117,10 @@ export default ({
 
     router.put('/:id/sections/:sectionId', async (req, res) => {
         const { id, sectionId } = req.params;
+        const userId = getUserId(req);
         const { name, taskIds } = req.body;
 
-        const project = await Project.findByIdAndUpdate(id, {
+        const project = await Project.findOneAndUpdate({ _id: id, userId }, {
             $set: {
                 [`sectionData.${sectionId}.name`]: name,
                 [`sectionData.${sectionId}.taskIds`]: taskIds
@@ -116,8 +138,9 @@ export default ({
 
     router.delete('/:id/sections/:sectionId', async (req, res) => {
         const { id, sectionId } = req.params;
+        const userId = getUserId(req);
 
-        const project = await Project.findByIdAndUpdate(id, {
+        const project = await Project.findOneAndUpdate({ _id: id, userId }, {
             $pull: { sectionIds: sectionId },
             $unset: { [`sectionData.${sectionId}`]: true }
         }, {
@@ -130,7 +153,7 @@ export default ({
 
         if (!section) throw new Error('Section is not found');
 
-        await Task.deleteMany({ _id: { $in: section.taskIds } });
+        await Task.deleteMany({ _id: { $in: section.taskIds }, userId });
 
         res.status(200).send(section);
     });

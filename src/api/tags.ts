@@ -1,4 +1,6 @@
-import { Request, Router } from 'express';
+import { Router } from 'express';
+
+import { getUserId } from '@olegpolyakov/backend/features/auth';
 
 import type Context from '@/context.ts';
 
@@ -8,39 +10,44 @@ export default ({
     const router = Router();
 
     router.get('/', async (req, res) => {
-        const tags = await Tag.find();
+        const userId = getUserId(req);
+        const tags = await Tag.find({ userId });
 
         res.status(200).json(tags);
     });
 
     router.get('/:id', async (req, res) => {
-        const tag = await Tag.findById(req.params.id);
+        const userId = getUserId(req);
+        const tag = await Tag.findOne({ _id: req.params.id, userId });
 
         res.status(200).json(tag);
     });
 
     router.post('/', async (req, res) => {
-        const userId = (req as Request & { userId: string }).userId;
+        const userId = getUserId(req);
         const tag = await Tag.create({ ...req.body, userId });
 
         res.status(201).json(tag);
     });
 
     router.put('/:id', async (req, res) => {
-        const tag = await Tag.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        const userId = getUserId(req);
+        const tag = await Tag.findOneAndUpdate({ _id: req.params.id, userId }, req.body, { new: true });
 
         res.status(200).json(tag);
     });
 
     router.delete('/:id', async (req, res) => {
         const { id } = req.params;
+        const userId = getUserId(req);
         const { deleteTasks = false } = req.body;
 
-        await Tag.deleteOne({ _id: id });
+        await Tag.deleteOne({ _id: id, userId });
 
         if (deleteTasks) {
             await Task.updateMany({
-                tagsId: id
+                tagsId: id,
+                userId
             }, {
                 $pull: { tagsId: id }
             });
