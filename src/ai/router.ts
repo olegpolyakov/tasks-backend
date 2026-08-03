@@ -6,6 +6,7 @@ import { AuthedRequest } from '@olegpolyakov/backend/features/auth';
 import type Context from '../context.ts';
 
 import projects from './tools/projects.ts';
+import tags from './tools/tags.ts';
 import tasks from './tools/tasks.ts';
 import Agent from './agent.ts';
 
@@ -13,7 +14,8 @@ export default (context: Context) => {
     const router = Router();
     const agent = Agent(context, {
         ...tasks(context),
-        ...projects(context)
+        ...projects(context),
+        ...tags(context)
     });
 
     router.post('/chat', async (req, res) => {

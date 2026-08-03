@@ -46,10 +46,10 @@ export default ({
 
         if (deleteTasks) {
             await Task.updateMany({
-                tagsId: id,
+                tagIds: id,
                 userId
             }, {
-                $pull: { tagsId: id }
+                $pull: { tagIds: id }
             });
         }
 
