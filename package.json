@@ -12,7 +12,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@olegpolyakov/backend": "^0.14.0",
+    "@olegpolyakov/backend": "^0.15.0",
     "@olegpolyakov/db": "^0.5.0",
     "@olegpolyakov/tasks-core": "^0.7.0",
     "@types/ws": "^8.18.1",
