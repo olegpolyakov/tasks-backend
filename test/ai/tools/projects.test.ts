@@ -1,50 +1,25 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import createProjectsTools from '../../src/ai/tools/projects.ts';
-import type Context from '../../src/context.ts';
+import createProjectsTools from '../../../src/ai/tools/projects.ts';
+import type Context from '../../../src/context.ts';
 
-function createProjectModel() {
-    return {
-        countDocuments: vi.fn(),
-        find: vi.fn(),
-        findOne: vi.fn(),
-        create: vi.fn(),
-        findOneAndUpdate: vi.fn(),
-        findOneAndDelete: vi.fn()
-    };
-}
-
-function createTaskModel() {
-    return {
-        deleteMany: vi.fn()
-    };
-}
-
-type ProjectModel = ReturnType<typeof createProjectModel>;
-type TaskModel = ReturnType<typeof createTaskModel>;
-
-function createContext(Project: ProjectModel, Task: TaskModel) {
-    return {
-        models: {
-            Project,
-            Task
-        }
-    } as unknown as Context;
-}
+import { createContext, createModel, ProjectModel, TaskModel } from './helpers.ts';
 
 describe('project tools', () => {
     let Project: ProjectModel;
     let Task: TaskModel;
+    let context: Context;
 
     beforeEach(() => {
-        Project = createProjectModel();
-        Task = createTaskModel();
+        Project = createModel();
+        Task = createModel();
+        context = createContext({ Project, Task });
     });
 
     it('counts projects for the user', async () => {
         Project.countDocuments.mockResolvedValue(3);
 
-        const tools = createProjectsTools(createContext(Project, Task));
+        const tools = createProjectsTools(context);
         const result = await tools.countProjects.call({ userId: 'user-1' });
 
         expect(Project.countDocuments).toHaveBeenCalledWith({ userId: 'user-1' });
@@ -57,7 +32,7 @@ describe('project tools', () => {
             { name: 'Roadmap' }
         ]);
 
-        const tools = createProjectsTools(createContext(Project, Task));
+        const tools = createProjectsTools(context);
         const result = await tools.listProjects.call({ userId: 'user-1' });
 
         expect(Project.find).toHaveBeenCalledWith({ userId: 'user-1' });
@@ -69,7 +44,7 @@ describe('project tools', () => {
             toJSON: () => ({ id: 'project-1', name: 'Inbox' })
         });
 
-        const tools = createProjectsTools(createContext(Project, Task));
+        const tools = createProjectsTools(context);
         const result = await tools.findProject.call({ query: 'inb', userId: 'user-1' });
 
         expect(Project.findOne).toHaveBeenCalledWith({
@@ -84,7 +59,7 @@ describe('project tools', () => {
             toJSON: () => ({ id: 'project-1', name: 'Inbox' })
         });
 
-        const tools = createProjectsTools(createContext(Project, Task));
+        const tools = createProjectsTools(context);
         const result = await tools.getProject.call({ id: 'project-1', userId: 'user-1' });
 
         expect(Project.findOne).toHaveBeenCalledWith({ _id: 'project-1', userId: 'user-1' });
@@ -96,7 +71,7 @@ describe('project tools', () => {
             toJSON: () => ({ id: 'project-1', name: 'Inbox', userId: 'user-1' })
         });
 
-        const tools = createProjectsTools(createContext(Project, Task));
+        const tools = createProjectsTools(context);
         const result = await tools.createProject.call({
             name: 'Inbox',
             userId: 'user-1'
@@ -111,7 +86,7 @@ describe('project tools', () => {
             toJSON: () => ({ id: 'project-1', name: 'Updated' })
         });
 
-        const tools = createProjectsTools(createContext(Project, Task));
+        const tools = createProjectsTools(context);
         const result = await tools.updateProject.call({
             id: 'project-1',
             userId: 'user-1',
@@ -135,7 +110,7 @@ describe('project tools', () => {
             toJSON: () => ({ id: 'project-1' })
         });
 
-        const tools = createProjectsTools(createContext(Project, Task));
+        const tools = createProjectsTools(context);
         const result = await tools.deleteProject.call({
             id: 'project-1',
             userId: 'user-1',
