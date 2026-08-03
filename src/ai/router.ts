@@ -6,10 +6,12 @@ import { AuthedRequest } from '@olegpolyakov/backend/features/auth';
 import type Context from '../context.ts';
 
 import Agent from './agent.ts';
+import tasks from './tasks.ts';
 
 export default (context: Context) => {
     const router = Router();
-    const agent = Agent(context);
+    const tools = { ...tasks };
+    const agent = Agent(context, tools);
 
     router.post('/chat', async (req, res) => {
         const userId = (req as AuthedRequest).userId;

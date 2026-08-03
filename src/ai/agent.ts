@@ -3,31 +3,36 @@ import { type ChatResponse, Message, Ollama } from 'ollama';
 import type Context from '@/context.ts';
 
 import type { Tool } from './lib.ts';
-import tasks from './tasks.ts';
 
-export default (context: Context) => {
+export interface Agent {
+    chat(
+        userId: string,
+        messages: Message[],
+        options?: {
+            model?: string;
+            stream?: boolean;
+        }
+    ): Promise<ChatResponse>;
+    loop(messages: Message[], model: string): Promise<ChatResponse>;
+    call(name: string, args: unknown): unknown;
+}
+
+export default (context: Context, tools: Record<string, Tool>): Agent => {
     const ollama = new Ollama({
         host: 'https://ollama.com',
         headers: {
             Authorization: `Bearer ${context.config.OLLAMA_TOKEN}`
         }
     });
-    const tools: Record<string, Tool> = {
-        ...tasks(context)
-    };
     const definitions = Object.values(tools).map(tool => tool.definition);
-    let userId = '';
 
     return {
         async chat(
-            userId: string,
-            messages: Message[],
+            userId,
+            messages,
             {
                 model = 'gemma4:31b-cloud',
                 stream = false
-            }: {
-                model?: string;
-                stream?: boolean;
             } = {}
         ) {
             if (!userId) {
@@ -68,16 +73,12 @@ export default (context: Context) => {
             return this.loop(messages, model);
         },
 
-        async loop(messages: Message[], model: string): Promise<ChatResponse> {
-            console.log('loop', messages);
-
+        async loop(messages, model) {
             const response = await ollama.chat({
                 model,
                 messages,
                 tools: definitions
             });
-
-            console.log('response', response);
 
             if (!response.message.tool_calls) {
                 return response;
@@ -87,8 +88,6 @@ export default (context: Context) => {
 
             for (const call of response.message.tool_calls) {
                 try {
-                    console.log('CALL', call.function.name,
-                        call.function.arguments);
                     const result = await this.call(
                         call.function.name,
                         call.function.arguments
@@ -112,16 +111,12 @@ export default (context: Context) => {
             return this.loop(messages, model);
         },
 
-        call(name: string, args: unknown) {
+        call(name, args) {
             const tool = tools[name];
 
             if (!tool) throw new Error('Unknown tool');
 
             return tool.call(args);
         }
-    } satisfies {
-        chat(userId: string, messages: Message[]): Promise<ChatResponse>;
-        loop(messages: Message[], model: string): Promise<ChatResponse>;
-        call(name: string, args: unknown): unknown;
-    };
+    } satisfies Agent;
 };
