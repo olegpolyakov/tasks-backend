@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import createTagsTools from '../../../src/ai/tools/tags.ts';
-import type Context from '../../../src/context.ts';
+import createTagsTools from '../../src/ai/tools/tags.ts';
+import type Context from '../../src/context.ts';
+import { createContext } from '../helpers/context.ts';
+import { createModel, TagModel, TaskModel } from '../helpers/models.ts';
 
-import { createContext, createModel, TagModel, TaskModel } from './helpers.ts';
-
-describe('tag tools', () => {
+describe('Tag tools', () => {
     let Tag: TagModel;
     let Task: TaskModel;
     let context: Context;

@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type Context from '../../src/context.ts';
 import router from '../../src/mcp/router.ts';
-import { createTaskModel, type TaskModel } from '../helpers/models.ts';
+import { createModel } from '../helpers/models.ts';
 import { createClient, createServer } from '../helpers/server.ts';
 
-const Task = createTaskModel();
+const Task = createModel();
 const context = { models: { Task } } as unknown as Context;
 const client = createClient(createServer(s => s.use(router(context))));
 
@@ -127,7 +127,7 @@ describe('MCP Router', () => {
     });
 });
 
-async function call(body: unknown, headers: Record<string, string> = {}) {
+async function call(body: Record<string, unknown>, headers: Record<string, string> = {}) {
     const res = await client.post('/').set(headers).send(body);
 
     return res.body;

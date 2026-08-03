@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import router from '../../src/ai/router.ts';
 import type Context from '../../src/context.ts';
+import { createContext } from '../helpers/context.ts';
+import { createModel } from '../helpers/models.ts';
 import { HOST, PORT, useRouter } from '../helpers/server.ts';
-
-import { createContext, createModel } from './tools/helpers.ts';
 
 const chat = vi.fn();
 
