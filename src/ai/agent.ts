@@ -1,21 +1,8 @@
-import { type ChatResponse, Message, Ollama } from 'ollama';
+import { Ollama } from 'ollama';
 
 import type Context from '@/context.ts';
 
-import type { Tool } from './lib.ts';
-
-export interface Agent {
-    chat(
-        userId: string,
-        messages: Message[],
-        options?: {
-            model?: string;
-            stream?: boolean;
-        }
-    ): Promise<ChatResponse>;
-    loop(messages: Message[], model: string): Promise<ChatResponse>;
-    call(name: string, args: unknown): unknown;
-}
+import type { Agent, Tool } from './lib.ts';
 
 export default (context: Context, tools: Record<string, Tool>): Agent => {
     const ollama = new Ollama({

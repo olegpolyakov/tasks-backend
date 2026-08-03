@@ -2,7 +2,7 @@ import type { TaskData } from '@olegpolyakov/tasks-core';
 
 import type Context from '@/context.ts';
 
-import { array, boolean, integer, object, string, Tool } from './lib.ts';
+import { array, boolean, integer, object, string, Tool } from '../lib.ts';
 
 export default ({ models: { Task } }: Context) => {
     const countTasks = new Tool(
@@ -12,7 +12,7 @@ export default ({ models: { Task } }: Context) => {
             'userId!': string('The ID of the user')
         },
         async ({ userId }: {userId: string}) => {
-            const count = Task.countDocuments({ userId });
+            const count = await Task.countDocuments({ userId });
     
             return String(count);
         }

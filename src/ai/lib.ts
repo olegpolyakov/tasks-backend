@@ -1,48 +1,16 @@
-export type DataType = Boolean | Integer | String | Object | Array;
-export type ValueType = 'boolean' | 'number' | 'string';
+import type { ChatResponse, Message } from 'ollama';
 
-export type Boolean = {
-    type: 'boolean';
-    description?: string;
-};
-
-export type Integer = {
-    type: 'integer';
-    description?: string;
-    minimum?: number;
-    maximum?: number;
-};
-
-export type String = {
-    type: 'string';
-    description?: string;
-    format?: string;
-    enum?: string[];
-};
-
-export type Object = {
-    type: 'object';
-    properties: Record<string, DataType>;
-    description?: string;
-    required?: string[];
-};
-
-export type Array = {
-    type: 'array';
-    items: {
-        type: ValueType;
-    }
-    description?: string;
-    uniqueItems?: boolean;
-};
-
-export type ToolDefinition = {
-    type: 'function', // always function
-    function: {
-        name: string;
-        description: string;
-        parameters: Object;
-    }
+export interface Agent {
+    chat(
+        userId: string,
+        messages: Message[],
+        options?: {
+            model?: string;
+            stream?: boolean;
+        }
+    ): Promise<ChatResponse>;
+    loop(messages: Message[], model: string): Promise<ChatResponse>;
+    call(name: string, args: unknown): unknown;
 }
 
 // TODO Replace any
@@ -80,6 +48,53 @@ export class Tool<T extends (args: any) => Promise<string> = (args: any) => Prom
         return this.fn(args);
     }
 }
+
+export type ToolDefinition = {
+    type: 'function', // always function
+    function: {
+        name: string;
+        description: string;
+        parameters: Object;
+    }
+}
+
+export type DataType = Boolean | Integer | String | Object | Array;
+export type ValueType = 'boolean' | 'number' | 'string';
+
+export type Boolean = {
+    type: 'boolean';
+    description?: string;
+};
+
+export type Integer = {
+    type: 'integer';
+    description?: string;
+    minimum?: number;
+    maximum?: number;
+};
+
+export type String = {
+    type: 'string';
+    description?: string;
+    format?: string;
+    enum?: string[];
+};
+
+export type Object = {
+    type: 'object';
+    properties: Record<string, DataType>;
+    description?: string;
+    required?: string[];
+};
+
+export type Array = {
+    type: 'array';
+    items: {
+        type: ValueType;
+    }
+    description?: string;
+    uniqueItems?: boolean;
+};
 
 export function boolean(description: string): Boolean {
     return {
