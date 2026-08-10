@@ -1,7 +1,24 @@
 import { Schema } from 'mongoose';
 
-import { RecurrenceFrequency } from '@olegpolyakov/core';
+import { RecurrenceData, RecurrenceFrequency } from '@olegpolyakov/core';
 import { Task } from '@olegpolyakov/tasks-core';
+
+const Recurrence = new Schema<RecurrenceData>({
+    frequency: {
+        type: String,
+        enum: [
+            RecurrenceFrequency.Daily,
+            RecurrenceFrequency.Weekly,
+            RecurrenceFrequency.Monthly,
+            RecurrenceFrequency.Yearly
+        ]
+    },
+    interval: { type: Number, default: 1 },
+    values: { type: [Number] }
+}, {
+    _id: false,
+    id: false
+});
 
 const TaskSchema = new Schema<Task>({
     title: { type: String, required: true },
@@ -10,22 +27,7 @@ const TaskSchema = new Schema<Task>({
     important: { type: Boolean, default: false },
     dueDate: { type: Date },
     content: { type: String },
-    recurrence: {
-        type: {
-            frequency: {
-                type: String,
-                enum: [
-                    RecurrenceFrequency.Daily,
-                    RecurrenceFrequency.Weekly,
-                    RecurrenceFrequency.Monthly,
-                    RecurrenceFrequency.Yearly
-                ]
-            },
-            interval: { type: Number, default: 1 },
-            values: { type: [Number] }
-        },
-        default: undefined
-    },
+    recurrence: { type: Recurrence, default: undefined },
     tagIds: { type: [String], default: [] },
     childrenIds: { type: [String] },
     userId: { type: String, required: true }
@@ -46,6 +48,10 @@ TaskSchema.virtual('projects', {
     options: {
         projection: 'name'
     }
+});
+
+TaskSchema.method('getNextDueDate', function() {
+    return new Task(this.toObject()).getNextDueDate();
 });
 
 export default TaskSchema;

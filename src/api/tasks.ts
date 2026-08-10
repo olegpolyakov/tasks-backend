@@ -50,6 +50,14 @@ export default ({
             completed
         }, { new: true }).populate('tags');
 
+        if (task?.completed && task.recurrence) {
+            await Task.create({
+                ...task.toObject(),
+                completed: false,
+                dueDate: task.getNextDueDate()
+            });
+        }
+
         res.status(200).json(task);
     });
 
