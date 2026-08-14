@@ -54,7 +54,7 @@ export default ({
             await Task.create({
                 ...task.toObject(),
                 completed: false,
-                dueDate: task.getNextDueDate()
+                date: task.getNextDate()
             });
         }
 
