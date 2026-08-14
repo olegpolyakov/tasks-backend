@@ -5,7 +5,7 @@ import type { Tag } from '@olegpolyakov/tasks-core';
 const TagSchema = new Schema<Tag>({
     name: { type: String, required: true },
     icon: { type: String },
-    userId: { type: String, required: true }
+    userId: { type: String, required: true, immutable: true }
 }, {
     timestamps: true
 });

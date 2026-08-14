@@ -25,7 +25,7 @@ const ProjectSchema = new Schema<ProjectData, ProjectModel, {}, {}, ProjectVirtu
     taskIds: { type: [String], default: [] },
     sectionIds: { type: [String], default: [] },
     sectionData: { type: Object, default: {} },
-    userId: { type: String, required: true }
+    userId: { type: String, required: true, immutable: true }
 }, {
     timestamps: true,
     minimize: false // this is needed, otherwise empty `sectionData` is removed from the doc

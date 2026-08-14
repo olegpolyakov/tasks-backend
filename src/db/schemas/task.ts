@@ -30,7 +30,7 @@ const TaskSchema = new Schema<Task>({
     recurrence: { type: Recurrence, default: undefined },
     tagIds: { type: [String], default: [] },
     childrenIds: { type: [String] },
-    userId: { type: String, required: true }
+    userId: { type: String, required: true, immutable: true }
 }, {
     timestamps: true
 });
