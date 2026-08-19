@@ -100,7 +100,7 @@ export default ({ models: { Project, Task } }: Context) => {
             })
         },
         async ({ id, userId, data }: { id: string; userId: string; data: Partial<ProjectData> }) => {
-            const project = await Project.findOneAndUpdate({ _id: id, userId }, data);
+            const project = await Project.findOneAndUpdate({ _id: id, userId }, data, { returnDocument: 'after' });
 
             if (!project) throw new Error('Project not found');
 
@@ -119,7 +119,7 @@ export default ({ models: { Project, Task } }: Context) => {
             })
         },
         async ({ id, userId, deleteTasks }: { id: string; userId: string; deleteTasks?: string }) => {
-            const project = await Project.findOneAndDelete({ _id: id, userId });
+            const project = await Project.findOneAndDelete({ _id: id, userId }, { returnDocument: 'after' });
 
             if (!project) throw new Error('Project not found');
 

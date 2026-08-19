@@ -75,6 +75,7 @@ export default ({ models: { Task } }: Context) => {
         },
         async (data: TaskData) => {
             const task = await Task.create(data);
+            
             return 'Created ' + JSON.stringify(task.toJSON());
         }
     );
@@ -88,7 +89,8 @@ export default ({ models: { Task } }: Context) => {
             'data!': object('The data for task', {
                 title: string('The title of the task'),
                 completed: boolean('The execution status of the task'),
-                dueDate: string('The deadline timestamp in ISO 8601 string format', {
+                important: boolean('Whether the task is marked as important or high priority'),
+                date: string('The deadline timestamp in ISO 8601 string format', {
                     format: 'date-time'
                 }),
                 recurrence: object('Recurrence configuration patterns for repeating tasks', {
@@ -109,7 +111,7 @@ export default ({ models: { Task } }: Context) => {
             })
         },
         async ({ id, userId, data }: { id: string; userId: string; data: TaskData }) => {
-            const task = await Task.findOneAndUpdate({ _id: id, userId }, data);
+            const task = await Task.findOneAndUpdate({ _id: id, userId }, data, { returnDocument: 'after' });
 
             if (!task) throw new Error('Task not found');
 
@@ -125,7 +127,7 @@ export default ({ models: { Task } }: Context) => {
             'userId!': string('The ID of the user')
         },
         async ({ id, userId }: { id: string; userId: string; }) => {
-            const task = await Task.findOneAndDelete({ _id: id, userId });
+            const task = await Task.findOneAndDelete({ _id: id, userId }, { returnDocument: 'after' });
 
             if (!task) throw new Error('Task not found');
 

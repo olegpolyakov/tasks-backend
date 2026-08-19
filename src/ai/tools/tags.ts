@@ -96,7 +96,7 @@ export default ({ models: { Tag, Task } }: Context) => {
             }
         },
         async ({ id, userId, data }: { id: string; userId: string; data: Partial<TagData> }) => {
-            const tag = await Tag.findOneAndUpdate({ _id: id, userId }, data);
+            const tag = await Tag.findOneAndUpdate({ _id: id, userId }, data, { returnDocument: 'after' });
 
             if (!tag) throw new Error('Tag not found');
 
@@ -113,7 +113,7 @@ export default ({ models: { Tag, Task } }: Context) => {
             deleteTasks: boolean('Remove this tag from tasks that use it')
         },
         async ({ id, userId, deleteTasks = false }: { id: string; userId: string; deleteTasks?: boolean }) => {
-            const tag = await Tag.findOneAndDelete({ _id: id, userId });
+            const tag = await Tag.findOneAndDelete({ _id: id, userId }, { returnDocument: 'after' });
 
             if (!tag) throw new Error('Tag not found');
 
