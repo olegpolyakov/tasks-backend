@@ -114,7 +114,7 @@ describe('Project tools', () => {
         const result = await tools.deleteProject.call({
             id: 'project-1',
             userId: 'user-1',
-            deleteTasks: 'true'
+            deleteTasks: true
         });
 
         expect(Project.findOneAndDelete).toHaveBeenCalledWith({ _id: 'project-1', userId: 'user-1' });

@@ -109,22 +109,19 @@ export default ({ models: { Tag, Task } }: Context) => {
         'Deletes a tag',
         {
             'id!': string('The ID of the tag'),
-            'userId!': string('The ID of the user'),
-            deleteTasks: boolean('Remove this tag from tasks that use it')
+            'userId!': string('The ID of the user')
         },
-        async ({ id, userId, deleteTasks = false }: { id: string; userId: string; deleteTasks?: boolean }) => {
+        async ({ id, userId }: { id: string; userId: string }) => {
             const tag = await Tag.findOneAndDelete({ _id: id, userId }, { returnDocument: 'after' });
 
             if (!tag) throw new Error('Tag not found');
 
-            if (deleteTasks) {
-                await Task.updateMany({
-                    tagIds: id,
-                    userId
-                }, {
-                    $pull: { tagIds: id }
-                });
-            }
+            await Task.updateMany({
+                tagIds: id,
+                userId
+            }, {
+                $pull: { tagIds: id }
+            });
 
             return 'Deleted ' + JSON.stringify(tag.toJSON());
         }

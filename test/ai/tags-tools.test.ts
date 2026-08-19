@@ -105,8 +105,7 @@ describe('Tag tools', () => {
         const tools = createTagsTools(context);
         const result = await tools.deleteTag.call({
             id: 'tag-1',
-            userId: 'user-1',
-            deleteTasks: true
+            userId: 'user-1'
         });
 
         expect(Tag.findOneAndDelete).toHaveBeenCalledWith({ _id: 'tag-1', userId: 'user-1' });

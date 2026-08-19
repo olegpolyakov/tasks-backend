@@ -40,19 +40,15 @@ export default ({
     router.delete('/:id', async (req, res) => {
         const { id } = req.params;
         const userId = getUserId(req);
-        const { deleteTasks = false } = req.body;
 
         await Tag.deleteOne({ _id: id, userId });
 
-        if (deleteTasks) {
-            await Task.updateMany({
-                tagIds: id,
-                userId
-            }, {
-                $pull: { tagIds: id }
-            });
-        }
-
+        await Task.updateMany({
+            tagIds: id,
+            userId
+        }, {
+            $pull: { tagIds: id }
+        });
         res.status(204).send({ id });
     });
 
