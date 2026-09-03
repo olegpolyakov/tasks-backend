@@ -1,8 +1,8 @@
-import { WebSocketServer } from 'ws';
+import { WebSocket, WebSocketServer } from 'ws';
 
 import type Context from '@/context.ts';
 
-export default ({ models: { Task, Tag, Project, Settings } }: Context) => (wss: WebSocketServer): WebSocketServer => {
+export default ({ models: { Task, Tag, Project, Settings } }: Context) => (wss: WebSocketServer, clients: WeakMap<WebSocket, string>): WebSocketServer => {
     const models = [Task, Tag, Project, Settings];
     const pipeline = [{
         $match: { operationType: { $in: ['insert', 'update', 'delete'] } }
@@ -24,7 +24,13 @@ export default ({ models: { Task, Tag, Project, Settings } }: Context) => (wss: 
             });
 
             wss.clients.forEach(client => {
-                if (client.readyState === 1) { // OPEN
+                const userId = clients.get(client);
+
+                if (
+                    client.readyState === WebSocket.OPEN &&
+                    (event.fullDocument.userId === userId ||
+                    event.fullDocument.userIds?.includes(userId))
+                ) { 
                     client.send(payload);
                 }
             });
