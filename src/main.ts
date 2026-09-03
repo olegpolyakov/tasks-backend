@@ -1,5 +1,6 @@
 import { auth } from '@olegpolyakov/backend/features/auth';
 import Server from '@olegpolyakov/backend/server';
+import Ws from '@olegpolyakov/backend/server/ws';
 
 import Ai from './ai/index.ts';
 import Api from './api/index.ts';
@@ -7,7 +8,6 @@ import DbChanges from './db/changes.ts';
 import Db from './db/index.ts';
 import Mcp from './mcp/index.ts';
 import type Context from './context.ts';
-import Ws from './ws.ts';
 
 const {
     DOMAIN = '',
