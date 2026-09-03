@@ -2,8 +2,8 @@ import { WebSocketServer } from 'ws';
 
 import type Context from '@/context.ts';
 
-export default ({ models: { Task, Tag, Project } }: Context) => (wss: WebSocketServer): WebSocketServer => {
-    const models = [Task, Tag, Project];
+export default ({ models: { Task, Tag, Project, Settings } }: Context) => (wss: WebSocketServer): WebSocketServer => {
+    const models = [Task, Tag, Project, Settings];
     const pipeline = [{
         $match: { operationType: { $in: ['insert', 'update', 'delete'] } }
     }];
