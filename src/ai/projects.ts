@@ -1,8 +1,7 @@
 import type { ProjectData } from '@olegpolyakov/tasks-core';
+import { array, object, string, Tool } from '@olegpolyakov/backend/features/ai';
 
 import type Context from '@/context.ts';
-
-import { array, object, string, Tool } from '../lib.ts';
 
 export default ({ models: { Project, Task } }: Context) => {
     const countProjects = new Tool(

@@ -1,8 +1,7 @@
 import type { TaskData } from '@olegpolyakov/tasks-core';
+import { array, boolean, integer, object, string, Tool } from '@olegpolyakov/backend/features/ai';
 
 import type Context from '@/context.ts';
-
-import { array, boolean, integer, object, string, Tool } from '../lib.ts';
 
 export default ({ models: { Task } }: Context) => {
     const countTasks = new Tool(
