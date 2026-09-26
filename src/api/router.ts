@@ -2,11 +2,11 @@ import { Router } from 'express';
 
 import { router as settings } from '@olegpolyakov/backend/features/settings';
 
-import type Context from '../context.ts';
+import type Context from '../context';
 
-import projects from './projects.ts';
-import tags from './tags.ts';
-import tasks from './tasks.ts';
+import projects from './projects';
+import tags from './tags';
+import tasks from './tasks';
 
 export default (context: Context) => {
     const router = Router();

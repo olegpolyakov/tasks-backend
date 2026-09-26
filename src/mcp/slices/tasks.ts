@@ -1,8 +1,8 @@
 import type { TaskData } from '@olegpolyakov/tasks-core';
 
-import type Context from '@/context.ts';
+import type Context from '@/context';
 
-import { createPrompt, createTool, type Slice } from '../lib.ts';
+import { createPrompt, createTool, type Slice } from '../lib';
 
 export default ({ models: { Task } }: Context) => (userId: string): Slice => ({
     async list() {

@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import { getUserId } from '@olegpolyakov/backend/features/auth';
 
-import type Context from '@/context.ts';
+import type Context from '@/context';
 
 export default ({
     models: { Task }

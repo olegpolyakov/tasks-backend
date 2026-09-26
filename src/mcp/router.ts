@@ -2,12 +2,12 @@ import { Router } from 'express';
 
 import { getUserId } from '@olegpolyakov/backend/features/auth';
 
-import type Context from '@/context.ts';
+import type Context from '@/context';
 
-import projects from './slices/projects.ts';
-import tags from './slices/tags.ts';
-import tasks from './slices/tasks.ts';
-import Mcp from './lib.ts';
+import Mcp from './lib';
+import projects from './slices/projects';
+import tags from './slices/tags';
+import tasks from './slices/tasks';
 
 export default (context: Context) => {
     const router = Router();

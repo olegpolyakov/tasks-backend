@@ -1,8 +1,8 @@
 import type { TagData } from '@olegpolyakov/tasks-core';
 
-import type Context from '@/context.ts';
+import type Context from '@/context';
 
-import { createTool, type Slice } from '../lib.ts';
+import { createTool, type Slice } from '../lib';
 
 export default ({ models: { Tag } }: Context) => (userId: string): Slice => ({
     async list() {

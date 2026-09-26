@@ -1,4 +1,4 @@
-import { Models } from './db/index.ts';
+import { Models } from './db';
 
 export type Context = {
     config: {

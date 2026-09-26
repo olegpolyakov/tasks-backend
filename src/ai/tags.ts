@@ -1,7 +1,7 @@
 import type { TagData } from '@olegpolyakov/tasks-core';
 import { string, Tool } from '@olegpolyakov/backend/features/ai';
 
-import type Context from '@/context.ts';
+import type Context from '@/context';
 
 export default ({ models: { Tag, Task } }: Context) => {
     const countTags = new Tool(

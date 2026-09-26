@@ -2,7 +2,7 @@ import { Schema } from 'mongoose';
 
 import { Task } from '@olegpolyakov/tasks-core';
 
-import Recurrence from './recurrence.ts';
+import Recurrence from './recurrence';
 
 const TaskSchema = new Schema<Task>({
     title: { type: String, required: true },

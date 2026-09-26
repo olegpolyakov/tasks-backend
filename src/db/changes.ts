@@ -1,6 +1,6 @@
 import { WebSocket, WebSocketServer } from 'ws';
 
-import type Context from '@/context.ts';
+import type Context from '@/context';
 
 export default ({ models: { Task, Tag, Project, Settings } }: Context) => (wss: WebSocketServer, clients: WeakMap<WebSocket, string>): WebSocketServer => {
     const models = [Task, Tag, Project, Settings];
