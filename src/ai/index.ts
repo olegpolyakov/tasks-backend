@@ -1,14 +1,13 @@
-import { Ollama, Router } from '@olegpolyakov/backend/features/ai';
+import { Router } from '@olegpolyakov/backend/features/ai';
 
 import type { Context } from '@/context';
 
-import Projects from './projects';
-import Tags from './tags';
-import Tasks from './tasks';
+import projects from './projects';
+import tags from './tags';
+import tasks from './tasks';
 
-export default (context: Context) =>
-    Router(Ollama(context.config.OLLAMA_TOKEN, {
-        ...Projects(context),
-        ...Tags(context),
-        ...Tasks(context)
-    }));
+export default (context: Context) => Router({
+    ...projects(context),
+    ...tags(context),
+    ...tasks(context)
+});

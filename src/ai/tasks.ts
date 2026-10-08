@@ -1,5 +1,6 @@
 import type { TaskData } from '@olegpolyakov/tasks-core';
-import { array, boolean, integer, object, string, Tool } from '@olegpolyakov/backend/features/ai';
+import { Tool } from '@olegpolyakov/backend/features/ai';
+import { array, boolean, integer, object, string } from '@olegpolyakov/core/utils/schema';
 
 import type Context from '@/context';
 

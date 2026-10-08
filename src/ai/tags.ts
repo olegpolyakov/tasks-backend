@@ -1,5 +1,6 @@
 import type { TagData } from '@olegpolyakov/tasks-core';
-import { string, Tool } from '@olegpolyakov/backend/features/ai';
+import { Tool } from '@olegpolyakov/backend/features/ai';
+import { string } from '@olegpolyakov/core/utils/schema';
 
 import type Context from '@/context';
 

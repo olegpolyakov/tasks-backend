@@ -7,7 +7,6 @@ import Api from './api';
 import type Context from './context';
 import Db from './db';
 import DbChanges from './db/changes';
-import Mcp from './mcp';
 
 const {
     DOMAIN = '',
@@ -44,7 +43,6 @@ Server({
     .use(auth({ jwtSecret: JWT_SECRET }))
     .use('/ai', Ai(context))
     .use('/api', Api(context))
-    .use('/mcp', Mcp(context))
     .plugin(Ws({ path: '/ws' }, [DbChanges(context)]))
     .start(() => {
         console.info(`Server is running on ${HOST}:${PORT}`);

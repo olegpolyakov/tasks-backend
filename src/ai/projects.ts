@@ -1,5 +1,6 @@
 import type { ProjectData } from '@olegpolyakov/tasks-core';
-import { array, object, string, Tool } from '@olegpolyakov/backend/features/ai';
+import { Tool } from '@olegpolyakov/backend/features/ai';
+import { array, object, string } from '@olegpolyakov/core/utils/schema';
 
 import type Context from '@/context';
 
