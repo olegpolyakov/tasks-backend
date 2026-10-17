@@ -1,32 +1,28 @@
 {
-  "name": "@olegpolyakov/tasks-backend",
-  "version": "0.1.0",
-  "description": "",
-  "author": "Oleg Poliakov <olegpoliakov@outlook.com>",
-  "type": "module",
-  "scripts": {
-    "dev": "tsx watch --env-file=.env ./src/main.ts",
-    "start": "tsx ./src/main.ts",
-    "lint": "eslint ./src",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "preversion": "npm install --workspaces=false && git add package-lock.json",
-    "postversion": "git tag $npm_package_version && git push origin $npm_package_version && rm -rf node_modules"
-  },
-  "dependencies": {
-    "@olegpolyakov/backend": "^0.17.0",
-    "@olegpolyakov/db": "^0.6.0",
-    "@olegpolyakov/tasks-core": "^0.9.0",
-    "tsx": "^4.21.0"
-  },
-  "devDependencies": {
-    "@types/express": "^5.0.6",
-    "@types/node": "^26.0.0",
-    "@types/supertest": "^7.2.1",
-    "@typescript-eslint/eslint-plugin": "^8.53.1",
-    "eslint-plugin-simple-import-sort": "^12.1.1",
-    "supertest": "^7.2.2",
-    "typescript": "^5.9.3",
-    "vitest": "^4.1.10"
-  }
+    "name": "@olegpolyakov/tasks-backend",
+    "version": "0.1.0",
+    "description": "",
+    "author": "Oleg Poliakov <olegpoliakov@outlook.com>",
+    "type": "module",
+    "scripts": {
+        "dev": "tsx watch --env-file=.env ./src/main.ts",
+        "start": "tsx ./src/main.ts",
+        "lint": "eslint ./src",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "preversion": "npm install --workspaces=false && git add package-lock.json",
+        "postversion": "git tag $npm_package_version && git push origin $npm_package_version && rm -rf node_modules"
+    },
+    "dependencies": {
+        "@olegpolyakov/backend": "^0.18.0",
+        "@olegpolyakov/tasks-core": "^0.9.0",
+        "tsx": "^4.21.0"
+    },
+    "devDependencies": {
+        "@types/supertest": "^7.2.0",
+        "eslint": "^10.4.0",
+        "supertest": "^7.2.2",
+        "typescript": "^5.9.3",
+        "vitest": "^4.1.10"
+    }
 }
