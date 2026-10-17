@@ -2,7 +2,7 @@ import type { ProjectData } from '@olegpolyakov/tasks-core';
 import { Tool } from '@olegpolyakov/backend/features/ai';
 import { array, object, string } from '@olegpolyakov/core/utils/schema';
 
-import type Context from '@/context';
+import type { Context } from '@/context';
 
 export default ({ models: { Project, Task } }: Context) => {
     const countProjects = new Tool(

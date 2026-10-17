@@ -2,7 +2,7 @@ import type { TaskData } from '@olegpolyakov/tasks-core';
 import { Tool } from '@olegpolyakov/backend/features/ai';
 import { array, boolean, integer, object, string } from '@olegpolyakov/core/utils/schema';
 
-import type Context from '@/context';
+import type { Context } from '@/context';
 
 export default ({ models: { Task } }: Context) => {
     const countTasks = new Tool(
@@ -11,7 +11,7 @@ export default ({ models: { Task } }: Context) => {
         {
             'userId!': string('The ID of the user')
         },
-        async ({ userId }: {userId: string}) => {
+        async ({ userId }: { userId: string }) => {
             const count = await Task.countDocuments({ userId });
     
             return String(count);
@@ -24,7 +24,7 @@ export default ({ models: { Task } }: Context) => {
         {
             'userId!': string('The ID of the user')
         },
-        async ({ userId }: {userId: string}) => {
+        async ({ userId }: { userId: string }) => {
             const tasks = await Task.find({ userId });
     
             return tasks.map(t => t.title).join(', ');

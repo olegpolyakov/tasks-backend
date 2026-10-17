@@ -2,7 +2,7 @@ import { Router } from 'express';
 
 import { router as settings } from '@olegpolyakov/backend/features/settings';
 
-import type Context from '../context';
+import type { Context } from '@/context';
 
 import projects from './projects';
 import tags from './tags';

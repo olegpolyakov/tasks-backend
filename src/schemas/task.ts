@@ -1,6 +1,7 @@
 import { Schema } from 'mongoose';
 
 import { Task } from '@olegpolyakov/tasks-core';
+import { Ref } from '@olegpolyakov/backend/db/schemas';
 
 import Recurrence from './recurrence';
 
@@ -13,7 +14,8 @@ const TaskSchema = new Schema<Task>({
     content: { type: String },
     tagIds: { type: [String], default: [] },
     childrenIds: { type: [String] },
-    userId: { type: String, required: true, immutable: true }
+    userId: { type: String, required: true, immutable: true },
+    refs: { type: [Ref], default: [] }
 }, {
     timestamps: true
 });

@@ -2,7 +2,7 @@ import type { TagData } from '@olegpolyakov/tasks-core';
 import { Tool } from '@olegpolyakov/backend/features/ai';
 import { string } from '@olegpolyakov/core/utils/schema';
 
-import type Context from '@/context';
+import type { Context } from '@/context';
 
 export default ({ models: { Tag, Task } }: Context) => {
     const countTags = new Tool(

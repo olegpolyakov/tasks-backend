@@ -1,33 +1,34 @@
+import Db from '@olegpolyakov/backend/db';
+import Changes from '@olegpolyakov/backend/db/changes';
 import { auth } from '@olegpolyakov/backend/features/auth';
 import Server from '@olegpolyakov/backend/server';
 import Ws from '@olegpolyakov/backend/server/ws';
 
 import Ai from './ai';
 import Api from './api';
-import type Context from './context';
-import Db from './db';
-import DbChanges from './db/changes';
+import Context from './context';
+import * as schemas from './schemas';
 
 const {
     DOMAIN = '',
     HOST = 'localhost',
     PORT = 3000,
-    DB_CONNECTION_STRING = '',
+    DB_URL = '',
     COOKIE_SECRET = '',
     JWT_SECRET = '',
     OLLAMA_TOKEN = ''
 } = process.env;
 
-const db = Db(DB_CONNECTION_STRING, { debug: true });
-
-await db.connect();
-
-const context: Context = {
-    config: {
-        OLLAMA_TOKEN
-    },
-    models: db.models
+const config = {
+    OLLAMA_TOKEN
 };
+
+const { models } = await Db(DB_URL, schemas, { debug: true }).connect();
+
+const context = Context({
+    config,
+    models
+}).build();
 
 Server({
     host: HOST,
@@ -43,7 +44,7 @@ Server({
     .use(auth({ jwtSecret: JWT_SECRET }))
     .use('/ai', Ai(context))
     .use('/api', Api(context))
-    .plugin(Ws({ path: '/ws' }, [DbChanges(context)]))
+    .plugin(Ws({ path: '/ws', jwtSecret: JWT_SECRET }, [Changes(models)]))
     .start(() => {
         console.info(`Server is running on ${HOST}:${PORT}`);
     });
