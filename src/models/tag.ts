@@ -2,7 +2,7 @@ import { Schema } from 'mongoose';
 
 import type { Tag } from '@olegpolyakov/tasks-core';
 
-const TagSchema = new Schema<Tag>({
+export const TagSchema = new Schema<Tag>({
     name: { type: String, required: true },
     icon: { type: String },
     userId: { type: String, required: true, immutable: true }
@@ -22,5 +22,3 @@ TagSchema.virtual('tasksCount', {
     foreignField: 'tagIds',
     count: true
 });
-
-export default TagSchema;

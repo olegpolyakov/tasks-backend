@@ -7,7 +7,7 @@ import Ws from '@olegpolyakov/backend/server/ws';
 import Ai from './ai';
 import Api from './api';
 import Context from './context';
-import * as schemas from './schemas';
+import Models from './models';
 
 const {
     DOMAIN = '',
@@ -23,8 +23,8 @@ const config = {
     OLLAMA_TOKEN
 };
 
-const { models } = await Db(DB_URL, schemas, { debug: true }).connect();
-
+const db = await Db(DB_URL).connect();
+const models = Models(db);
 const context = Context({
     config,
     models

@@ -2,14 +2,14 @@ import { type Model, Schema } from 'mongoose';
 
 import type { ProjectData, ProjectSectionData, Task } from '@olegpolyakov/tasks-core';
 
+type ProjectModel = Model<Omit<ProjectData, 'sectionData'> & {
+    sectionData: Map<string, ProjectSectionData>
+}>;
+
 type ProjectVirtuals = {
     id: string;
     tasks: Task[]
 };
-
-type ProjectModel = Model<Omit<ProjectData, 'sectionData'> & {
-    sectionData: Map<string, ProjectSectionData>
-}>;
 
 export const ProjectSectionSchema = new Schema<ProjectSectionData>({
     name: { type: String, required: true },
@@ -17,7 +17,7 @@ export const ProjectSectionSchema = new Schema<ProjectSectionData>({
     taskIds: { type: [String], default: [] }
 });
 
-const ProjectSchema = new Schema<ProjectData, ProjectModel, {}, {}, ProjectVirtuals>({
+export const ProjectSchema = new Schema<ProjectData, ProjectModel, object, object, ProjectVirtuals>({
     name: { type: String, required: true },
     description: { type: String },
     content: { type: String },
@@ -36,5 +36,3 @@ ProjectSchema.virtual('tasks', {
     localField: 'taskIds',
     foreignField: '_id'
 });
-
-export default ProjectSchema;

@@ -1,21 +1,19 @@
 import { Schema } from 'mongoose';
 
 import { Task } from '@olegpolyakov/tasks-core';
-import { Ref } from '@olegpolyakov/backend/db/schemas';
+import { RecurrenceSchema, RefSchema } from '@olegpolyakov/backend/db/schemas';
 
-import Recurrence from './recurrence';
-
-const TaskSchema = new Schema<Task>({
+export const TaskSchema = new Schema<Task>({
     title: { type: String, required: true },
     completed: { type: Boolean, default: false },
     important: { type: Boolean, default: false },
     date: { type: Date },
-    recurrence: { type: Recurrence, default: undefined },
+    recurrence: { type: RecurrenceSchema, default: undefined },
     content: { type: String },
     tagIds: { type: [String], default: [] },
     childrenIds: { type: [String] },
     userId: { type: String, required: true, immutable: true },
-    refs: { type: [Ref], default: [] }
+    refs: { type: [RefSchema], default: [] }
 }, {
     timestamps: true
 });
@@ -38,5 +36,3 @@ TaskSchema.virtual('projects', {
 TaskSchema.method('getNextDate', function() {
     return new Task(this.toObject()).getNextDate();
 });
-
-export default TaskSchema;

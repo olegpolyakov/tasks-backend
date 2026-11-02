@@ -1,13 +1,12 @@
-import Context from '@olegpolyakov/backend/context';
-import type { Models } from '@olegpolyakov/backend/db';
+import { createContext } from '@olegpolyakov/backend/context';
 
-import * as schemas from './schemas';
+import type { Models } from './models';
 
 export type Context = {
     config: {
         OLLAMA_TOKEN: string;
     };
-    models: Models<typeof schemas>;
+    models: Models;
 };
 
-export default (value: Context) => Context<Context>(value);
+export default (value: Context) => createContext<Context>(value);
