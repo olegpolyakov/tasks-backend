@@ -11,6 +11,7 @@ export default ({
 
     router.get('/', async (req, res) => {
         const userId = getUserId(req);
+
         const tags = await Tag.find({ userId });
 
         res.status(200).json(tags);
@@ -18,6 +19,7 @@ export default ({
 
     router.get('/:id', async (req, res) => {
         const userId = getUserId(req);
+
         const tag = await Tag.findOne({ _id: req.params.id, userId });
 
         res.status(200).json(tag);
@@ -25,6 +27,7 @@ export default ({
 
     router.post('/', async (req, res) => {
         const userId = getUserId(req);
+
         const tag = await Tag.create({ ...req.body, userId });
 
         res.status(201).json(tag);
@@ -32,24 +35,24 @@ export default ({
 
     router.put('/:id', async (req, res) => {
         const userId = getUserId(req);
-        const tag = await Tag.findOneAndUpdate({ _id: req.params.id, userId }, req.body, { new: true });
+
+        const tag = await Tag.update({ _id: req.params.id, userId }, req.body);
 
         res.status(200).json(tag);
     });
 
     router.delete('/:id', async (req, res) => {
-        const { id } = req.params;
         const userId = getUserId(req);
 
-        await Tag.deleteOne({ _id: id, userId });
-
+        const tag = await Tag.delete({ _id: req.params.id, userId });
         await Task.updateMany({
-            tagIds: id,
+            tagIds: tag.id,
             userId
         }, {
-            $pull: { tagIds: id }
+            $pull: { tagIds: tag.id }
         });
-        res.status(204).send({ id });
+        
+        res.status(204).send(tag);
     });
 
     return router;

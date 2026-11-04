@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { getUserId } from '@olegpolyakov/backend/features/auth';
+import { NotFoundError } from '@olegpolyakov/backend/server';
 
 import type { Context } from '@/context';
 
@@ -11,17 +12,17 @@ export default ({
 
     router.param('id', async (req, res, next, id) => {
         const userId = getUserId(req);
+
         const task = await Task.findOne({ _id: id, userId }, { _id: true });
 
-        if (!task) {
-            return res.status(404).json({ message: 'Task not found' });
-        }
+        if (!task) throw new NotFoundError('Task not found');
 
         next();
     });
     
     router.get('/', async (req, res) => {
         const userId = getUserId(req);
+
         const tasks = await Task.find({ userId });
 
         res.status(200).json(tasks);
@@ -29,6 +30,7 @@ export default ({
 
     router.post('/', async (req, res) => {
         const userId = getUserId(req);
+
         const task = await Task.create({ ...req.body, userId });
 
         res.status(201).json(task);
@@ -36,8 +38,11 @@ export default ({
 
     router.put('/:id', async (req, res) => {
         const userId = getUserId(req);
-        const task = await Task.findOneAndUpdate({ _id: req.params.id, userId }, req.body, { returnDocument: 'after' })
-            .populate('tags');
+
+        const task = await Task.update(
+            { _id: req.params.id, userId },
+            req.body
+        ).populate('tags');
 
         res.status(200).json(task);
     });
@@ -46,9 +51,10 @@ export default ({
         const userId = getUserId(req);
         const { completed } = req.body;
 
-        const task = await Task.findOneAndUpdate({ _id: req.params.id, userId }, {
-            completed
-        }, { new: true }).populate('tags');
+        const task = await Task.update(
+            { _id: req.params.id, userId },
+            { completed }
+        ).populate('tags');
 
         if (task?.completed && task.recurrence) {
             await Task.create({
@@ -63,7 +69,8 @@ export default ({
 
     router.delete('/:id', async (req, res) => {
         const userId = getUserId(req);
-        const task = await Task.findOneAndDelete({ _id: req.params.id, userId });
+        
+        const task = await Task.delete({ _id: req.params.id, userId });
 
         res.status(204).send({ id: task });
     });
