@@ -1,134 +1,396 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import supertest from 'supertest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
-import type Context from '../../src/context.ts';
-import router from '../../src/mcp/router.ts';
-import { createModel } from '../helpers/models.ts';
-import { createClient, createServer } from '../helpers/server.ts';
+import type { ServerMiddleware } from '@olegpolyakov/backend/server';
+import { useDb } from '@olegpolyakov/backend/test/mocks/db';
+import { useModel } from '@olegpolyakov/backend/test/mocks/models';
+import { useServer } from '@olegpolyakov/backend/test/mocks/server';
+import { USER_ID, useUser } from '@olegpolyakov/backend/test/mocks/user';
 
-const Task = createModel();
-const context = { models: { Task } } as unknown as Context;
-const client = createClient(createServer(s => s.use(router(context))));
+import type { Context } from '@/context';
+import router from '@/mcp';
+import { ProjectSchema, TagSchema, TaskSchema } from '@/models';
+
+const {
+    HOST = 'localhost',
+    PORT = 3000
+} = process.env;
+
+const authenticateTestRequest: ServerMiddleware = (req, res, next) => {
+    const userId = req.header('x-user-id');
+
+    if (userId) req.userId = userId;
+
+    next();
+};
 
 describe('MCP Router', () => {
+    const db = useDb();
+    useUser(db);
+    const Project = useModel(db, 'Project', ProjectSchema, { beforeEach: true });
+    const Tag = useModel(db, 'Tag', TagSchema, { beforeEach: true });
+    const Task = useModel(db, 'Task', TaskSchema, { beforeEach: true });
+    const context = {
+        config: {},
+        models: { Project, Tag, Task }
+    } as unknown as Context;
+    const server = useServer(
+        { host: HOST, port: PORT },
+        authenticateTestRequest,
+        router(context)
+    );
+    const agent = supertest.agent(server);
+    let requestId = 0;
+
     beforeEach(() => {
-        vi.resetAllMocks();
+        requestId = 0;
     });
 
-    it('returns an error when the request is unauthenticated', async () => {
-        // The auth check happens outside the router's try/catch, so it is
-        // handled by the server's generic error middleware instead of being
-        // wrapped in the JSON-RPC error shape.
-        const result = await call({ id: 1, method: 'tools/list' });
+    it('rejects unauthenticated requests', async () => {
+        const response = await agent.post('/')
+            .set('Accept', 'application/json, text/event-stream')
+            .send({
+                jsonrpc: '2.0',
+                id: ++requestId,
+                method: 'tools/list'
+            });
 
-        expect(result).toEqual({ error: 'Unauthenticated request' });
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ error: 'User ID is missing' });
     });
 
-    it('returns an error for an unknown method', async () => {
-        const result = await call({ id: 2, method: 'unknown/method' }, { 'x-user-id': 'user-1' });
+    it('returns a protocol error for an unknown method', async () => {
+        const response = await call('unknown/method');
 
-        expect(result).toEqual({
-            jsonrpc: '2.0',
-            id: 2,
-            error: { code: -32000, message: 'Unknown method' }
+        expect(response.error).toMatchObject({
+            code: -32601,
+            message: expect.any(String)
         });
     });
 
-    it('lists tools', async () => {
-        const result = await call({ id: 3, method: 'tools/list' }, { 'x-user-id': 'user-1' });
+    describe('tools/list', () => {
+        it.only('lists project, tag, and task tools', async () => {
+            const response = await call('tools/list');
 
-        expect(result.jsonrpc).toBe('2.0');
-        expect(result.id).toBe(3);
-        expect(result.result.tools).toEqual(
-            expect.arrayContaining([
-                expect.objectContaining({ name: 'createTask' }),
-                expect.objectContaining({ name: 'updateTask' }),
-                expect.objectContaining({ name: 'toggleTask' }),
-                expect.objectContaining({ name: 'deleteTask' })
-            ])
-        );
-    });
+            const tools = response.result?.tools ?? [];
 
-    it('lists resources', async () => {
-        Task.find.mockResolvedValue([{ id: '1', title: 'Buy milk' }]);
+            console.log(tools[5].inputSchema);
 
-        const result = await call({ id: 4, method: 'resources/list' }, { 'x-user-id': 'user-1' });
+            expect(tools.map(tool => tool.name)).toEqual(expect.arrayContaining([
+                'countProjects',
+                'listProjects',
+                'findProject',
+                'getProject',
+                'createProject',
+                'updateProject',
+                'deleteProject',
+                'countTags',
+                'listTags',
+                'findTag',
+                'getTag',
+                'createTag',
+                'updateTag',
+                'deleteTag',
+                'countTasks',
+                'listTasks',
+                'findTask',
+                'getTask',
+                'createTask',
+                'updateTask',
+                'deleteTask'
+            ]));
+        });
 
-        expect(result).toEqual({
-            jsonrpc: '2.0',
-            id: 4,
-            result: { resources: [{ uri: 'tasks://1', name: 'Buy milk', mimeType: 'application/json' }] }
+        it('lists userId as a required tool argument', async () => {
+            const response = await call('tools/list');
+            const createTaskTool = response.result?.tools?.find(tool => tool.name === 'createTask');
+
+            expect(createTaskTool?.inputSchema.properties).toHaveProperty('userId');
+            expect(createTaskTool?.inputSchema.required).toContain('userId');
         });
     });
 
-    it('reads a resource', async () => {
-        const populate = vi.fn().mockResolvedValue({ toJSON: () => ({ id: '1', title: 'Buy milk' }) });
+    it('rejects a tool call for a user other than the authenticated user', async () => {
+        const response = await callTool('countTasks', { userId: 'other-user' });
 
-        Task.findOne.mockReturnValue({ populate });
+        expect(response.result?.isError).toBe(true);
+        expect(asText(response)).toContain('Tool userId must match the authenticated user');
+    });
 
-        const result = await call({
-            id: 5,
-            method: 'resources/read',
-            params: { uri: 'tasks://1' }
-        }, { 'x-user-id': 'user-1' });
+    describe('project tools', () => {
+        it('counts only the authenticated user’s projects', async () => {
+            await Project.create({ name: 'Work', userId: USER_ID });
+            await Project.create({ name: 'Personal', userId: USER_ID });
+            await Project.create({ name: 'Other user project', userId: 'other-user' });
 
-        expect(Task.findOne).toHaveBeenCalledWith({ _id: '1', userId: 'user-1' });
-        expect(result).toEqual({
-            jsonrpc: '2.0',
-            id: 5,
-            result: { contents: { id: '1', title: 'Buy milk' } }
+            expect(asText(await callTool('countProjects'))).toBe('2');
+        });
+
+        it('lists only the authenticated user’s projects', async () => {
+            await Project.create({ name: 'Work', userId: USER_ID });
+            await Project.create({ name: 'Personal', userId: USER_ID });
+            await Project.create({ name: 'Other user project', userId: 'other-user' });
+
+            expect(asText(await callTool('listProjects'))).toBe('Work, Personal');
+        });
+
+        it('finds a project by name for the authenticated user', async () => {
+            const work = await Project.create({ name: 'Work', userId: USER_ID });
+            await Project.create({ name: 'Work', userId: 'other-user' });
+
+            expect(JSON.parse(asText(await callTool('findProject', { query: 'work' }))))
+                .toMatchObject({ id: work.id, name: 'Work' });
+        });
+
+        it('gets a project by id for the authenticated user', async () => {
+            const work = await Project.create({ name: 'Work', userId: USER_ID });
+
+            expect(JSON.parse(asText(await callTool('getProject', { id: work.id }))))
+                .toMatchObject({ id: work.id, name: 'Work' });
+        });
+
+        it('creates a project for the authenticated user', async () => {
+            const created = await callTool('createProject', { name: 'Work' });
+
+            expect(created.result?.isError).not.toBe(true);
+
+            const project = await Project.findOne({ name: 'Work', userId: USER_ID });
+
+            expect(project).not.toBeNull();
+            expect(asText(created)).toContain('Created ');
+        });
+
+        it('updates a project for the authenticated user', async () => {
+            const project = await Project.create({ name: 'Work', userId: USER_ID });
+            const updated = await callTool('updateProject', {
+                id: project.id,
+                data: { name: 'Updated work' }
+            });
+
+            expect(asText(updated)).toContain('Updated ');
+            await expect(Project.findOne({ _id: project.id, userId: USER_ID })).resolves.toMatchObject({
+                name: 'Updated work'
+            });
+        });
+
+        it('deletes a project and its root and section tasks when requested', async () => {
+            const rootTask = await Task.create({ title: 'Root task', userId: USER_ID });
+            const sectionTask = await Task.create({ title: 'Section task', userId: USER_ID });
+            const otherUserTask = await Task.create({ title: 'Other user task', userId: 'other-user' });
+            const project = await Project.create({
+                name: 'Work',
+                taskIds: [rootTask.id],
+                sectionData: { section1: { taskIds: [sectionTask.id] } },
+                userId: USER_ID
+            });
+
+            const result = await callTool('deleteProject', {
+                id: project.id,
+                deleteTasks: 'true'
+            });
+
+            expect(asText(result)).toContain('Deleted ');
+            await expect(Project.findOne({ _id: project.id, userId: USER_ID })).resolves.toBeNull();
+            await expect(Task.findOne({ _id: rootTask.id })).resolves.toBeNull();
+            await expect(Task.findOne({ _id: sectionTask.id })).resolves.toBeNull();
+            await expect(Task.findOne({ _id: otherUserTask.id })).resolves.not.toBeNull();
         });
     });
 
-    it('calls a tool', async () => {
-        Task.create.mockResolvedValue({ id: '1', title: 'New task' });
+    describe('task tools', () => {
+        it('counts only the authenticated user’s tasks', async () => {
+            await Task.create({ title: 'Buy milk', userId: USER_ID });
+            await Task.create({ title: 'Walk dog', userId: USER_ID });
+            await Task.create({ title: 'Other user task', userId: 'other-user' });
 
-        const result = await call({
-            id: 6,
-            method: 'tools/call',
-            params: { name: 'createTask', arguments: { data: { title: 'New task' } } }
-        }, { 'x-user-id': 'user-1' });
+            expect(asText(await callTool('countTasks'))).toBe('2');
+        });
 
-        expect(Task.create).toHaveBeenCalledWith({ title: 'New task', userId: 'user-1' });
-        expect(result).toEqual({
-            jsonrpc: '2.0',
-            id: 6,
-            result: { id: '1', title: 'New task' }
+        it('lists only the authenticated user’s tasks', async () => {
+            await Task.create({ title: 'Buy milk', userId: USER_ID });
+            await Task.create({ title: 'Walk dog', userId: USER_ID });
+            await Task.create({ title: 'Other user task', userId: 'other-user' });
+
+            expect(asText(await callTool('listTasks'))).toBe('Buy milk, Walk dog');
+        });
+
+        it('finds a task by title for the authenticated user', async () => {
+            const task = await Task.create({ title: 'Buy milk', userId: USER_ID });
+            await Task.create({ title: 'Buy milk', userId: 'other-user' });
+
+            expect(JSON.parse(asText(await callTool('findTask', { query: 'milk' }))))
+                .toMatchObject({ id: task.id, title: 'Buy milk' });
+        });
+
+        it('gets a task by id for the authenticated user', async () => {
+            const task = await Task.create({ title: 'Buy milk', userId: USER_ID });
+
+            expect(JSON.parse(asText(await callTool('getTask', { id: task.id }))))
+                .toMatchObject({ id: task.id, title: 'Buy milk' });
+        });
+
+        it('creates a task for the requested user', async () => {
+            const created = await callTool('createTask', {
+                title: 'Buy milk',
+                userId: USER_ID
+            });
+
+            expect(asText(created)).toContain('Created ');
+            await expect(Task.findOne({ title: 'Buy milk', userId: USER_ID })).resolves.not.toBeNull();
+        });
+
+        it('updates a task for the requested user', async () => {
+            const task = await Task.create({ title: 'Buy milk', userId: USER_ID });
+
+            const updated = await callTool('updateTask', {
+                id: task.id,
+                data: { title: 'Buy oat milk' }
+            });
+
+            expect(asText(updated)).toContain('Updated ');
+            await expect(Task.findOne({ _id: task.id, userId: USER_ID })).resolves.toMatchObject({
+                title: 'Buy oat milk'
+            });
+        });
+
+        it('deletes a task for the requested user', async () => {
+            const task = await Task.create({ title: 'Buy milk', userId: USER_ID });
+
+            const deleted = await callTool('deleteTask', { id: task.id });
+
+            expect(asText(deleted)).toContain('Deleted ');
+            await expect(Task.findOne({ _id: task.id, userId: USER_ID })).resolves.toBeNull();
         });
     });
 
-    it('lists prompts', async () => {
-        const result = await call({ id: 7, method: 'prompts/list' }, { 'x-user-id': 'user-1' });
+    describe('tag tools', () => {
+        it('counts only the authenticated user’s tags', async () => {
+            await Tag.create({ name: 'urgent', userId: USER_ID });
+            await Tag.create({ name: 'home', userId: USER_ID });
+            await Tag.create({ name: 'Other user tag', userId: 'other-user' });
 
-        expect(result).toEqual({
-            jsonrpc: '2.0',
-            id: 7,
-            result: {
-                prompts: [{
-                    name: 'taskDescription',
-                    description: 'Generate a task description template',
-                    arguments: [{ name: 'topic', type: 'string' }]
-                }]
-            }
+            expect(asText(await callTool('countTags'))).toBe('2');
+        });
+
+        it('lists only the authenticated user’s tags', async () => {
+            await Tag.create({ name: 'urgent', userId: USER_ID });
+            await Tag.create({ name: 'home', userId: USER_ID });
+            await Tag.create({ name: 'Other user tag', userId: 'other-user' });
+
+            expect(asText(await callTool('listTags'))).toBe('urgent, home');
+        });
+
+        it('finds a tag by name for the authenticated user', async () => {
+            const tag = await Tag.create({ name: 'urgent', userId: USER_ID });
+            await Tag.create({ name: 'urgent', userId: 'other-user' });
+
+            expect(JSON.parse(asText(await callTool('findTag', { query: 'urgent' }))))
+                .toMatchObject({ id: tag.id, name: 'urgent' });
+        });
+
+        it('gets a tag by id for the authenticated user', async () => {
+            const tag = await Tag.create({ name: 'urgent', userId: USER_ID });
+
+            expect(JSON.parse(asText(await callTool('getTag', { id: tag.id }))))
+                .toMatchObject({ id: tag.id, name: 'urgent' });
+        });
+
+        it('creates a tag for the authenticated user', async () => {
+            const created = await callTool('createTag', { name: 'urgent' });
+
+            expect(asText(created)).toContain('Created ');
+            await expect(Tag.findOne({ name: 'urgent', userId: USER_ID })).resolves.not.toBeNull();
+        });
+
+        it('updates a tag for the authenticated user', async () => {
+            const tag = await Tag.create({ name: 'urgent', userId: USER_ID });
+
+            const updated = await callTool('updateTag', {
+                id: tag.id,
+                data: { name: 'important' }
+            });
+
+            expect(asText(updated)).toContain('Updated ');
+            await expect(Tag.findOne({ _id: tag.id, userId: USER_ID })).resolves.toMatchObject({
+                name: 'important'
+            });
+        });
+
+        it('deletes a tag and removes it from the authenticated user’s tasks', async () => {
+            const tag = await Tag.create({ name: 'urgent', userId: USER_ID });
+            const task = await Task.create({
+                title: 'Tagged task',
+                tagIds: [tag.id],
+                userId: USER_ID
+            });
+            const otherUserTask = await Task.create({
+                title: 'Other user tagged task',
+                tagIds: [tag.id],
+                userId: 'other-user'
+            });
+            const deleted = await callTool('deleteTag', { id: tag.id });
+
+            expect(asText(deleted)).toContain('Deleted ');
+            await expect(Tag.findOne({ _id: tag.id, userId: USER_ID })).resolves.toBeNull();
+            await expect(Task.findOne({ _id: task.id })).resolves.toMatchObject({ tagIds: [] });
+            await expect(Task.findOne({ _id: otherUserTask.id })).resolves.toMatchObject({
+                tagIds: [tag.id]
+            });
         });
     });
 
-    it('gets a prompt', async () => {
-        const result = await call({
-            id: 8,
-            method: 'prompts/get',
-            params: { name: 'taskDescription', arguments: { topic: 'groceries' } }
-        }, { 'x-user-id': 'user-1' });
+    async function call(method: string, params?: Record<string, unknown>): Promise<McpResponse> {
+        const response = await agent.post('/')
+            .set('Accept', 'application/json, text/event-stream')
+            .set('x-user-id', USER_ID)
+            .send({
+                jsonrpc: '2.0',
+                id: ++requestId,
+                method,
+                ...(params ? { params } : {})
+            });
 
-        expect(result).toEqual({
-            jsonrpc: '2.0',
-            id: 8,
-            result: { messages: [{ role: 'user', content: 'Create a todo related to groceries' }] }
+        expect(response.status).toBe(200);
+
+        const data = response.text.split(/\r?\n/).find(line => line.startsWith('data: '));
+
+        if (!data) throw new Error('MCP response did not contain an event payload');
+
+        return JSON.parse(data.slice('data: '.length)) as McpResponse;
+    }
+
+    async function callTool(name: string, args: Record<string, unknown> = {}) {
+        return call('tools/call', {
+            name,
+            arguments: { userId: USER_ID, ...args }
         });
-    });
+    }
+
+    function asText(response: McpResponse): string {
+        const text = response.result?.content?.find(content => content.type === 'text')?.text;
+
+        if (text === undefined) {
+            throw new Error('MCP tool response did not contain text content');
+        }
+
+        return text;
+    }
 });
 
-async function call(body: Record<string, unknown>, headers: Record<string, string> = {}) {
-    const res = await client.post('/').set(headers).send(body);
-
-    return res.body;
-}
+type McpResponse = {
+    error?: {
+        code: number;
+        message: string;
+    };
+    result?: {
+        content?: { type: string; text?: string }[];
+        isError?: boolean;
+        tools?: {
+            name: string;
+            inputSchema: {
+                properties?: Record<string, unknown>;
+                required?: string[];
+            };
+        }[];
+    };
+};

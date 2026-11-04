@@ -1,44 +1,44 @@
 import type { TaskData } from '@olegpolyakov/tasks-core';
-import { Tool } from '@olegpolyakov/backend/features/ai';
+import { createTool } from '@olegpolyakov/backend/mcp';
 import { array, boolean, integer, object, string } from '@olegpolyakov/core/utils/schema';
 
 import type { Context } from '@/context';
 
 export default ({ models: { Task } }: Context) => {
-    const countTasks = new Tool(
+    const countTasks = createTool<{ userId: string }>(
         'countTasks',
         'Get the number of tasks',
         {
-            'userId!': string('The ID of the user')
+            userId: string('The ID of the user')
         },
-        async ({ userId }: { userId: string }) => {
+        async ({ userId }) => {
             const count = await Task.countDocuments({ userId });
     
             return String(count);
         }
     );
 
-    const listTasks = new Tool(
+    const listTasks = createTool<{ userId: string }>(
         'listTasks',
         'List tasks',
         {
-            'userId!': string('The ID of the user')
+            userId: string('The ID of the user')
         },
-        async ({ userId }: { userId: string }) => {
+        async ({ userId }) => {
             const tasks = await Task.find({ userId });
     
             return tasks.map(t => t.title).join(', ');
         }
     );
 
-    const findTask = new Tool(
+    const findTask = createTool<{ query: string; userId: string }>(
         'findTask',
         'Find task by a query',
         {
-            'query!': string('The query'),
-            'userId!': string('The ID of the user')
+            query: string('The query'),
+            userId: string('The ID of the user')
         },
-        async ({ query, userId }: { query: string; userId: string }) => {
+        async ({ query, userId }) => {
             const task = await Task.findOne({
                 title: { $regex: query, $options: 'i' },
                 userId
@@ -50,86 +50,80 @@ export default ({ models: { Task } }: Context) => {
         }
     );
             
-    const getTask = new Tool(
+    const getTask = createTool<{ id: string; userId: string; }>(
         'getTask',
         'Get a task by ID',
         {
-            'id!': string('The ID of the task'),
-            'userId!': string('The ID of the user')
+            id: string('The ID of the task'),
+            userId: string('The ID of the user')
         },
-        async ({ id, userId }: { id: string; userId: string; }) => {
-            const task = await Task.findOne({ _id: id, userId });
-    
-            if (!task) throw new Error('Task not found');
+        async ({ id, userId }) => {
+            const task = await Task.get({ _id: id, userId });
     
             return JSON.stringify(task?.toJSON());
         }
     );
 
-    const createTask = new Tool(
+    const createTask = createTool<TaskData>(
         'createTask',
         'Create a new task',
         {
-            'title!': string('The title of the task'),
-            'userId!': string('The ID of the user')
+            title: string('The title of the task'),
+            userId: string('The ID of the user')
         },
-        async (data: TaskData) => {
+        async data => {
             const task = await Task.create(data);
             
             return 'Created ' + JSON.stringify(task.toJSON());
         }
     );
 
-    const updateTask = new Tool(
+    const updateTask = createTool<{
+        id: string;
+        userId: string;
+        data: TaskData
+    }>(
         'updateTask',
         'Update a task',
         {
             'id!': string('The ID of the task'),
             'userId!': string('The ID of the user'),
-            'data!': object('The data for task', {
+            'data!': object({
                 title: string('The title of the task'),
                 completed: boolean('The execution status of the task'),
                 important: boolean('Whether the task is marked as important or high priority'),
                 date: string('The deadline timestamp in ISO 8601 string format', {
                     format: 'date-time'
                 }),
-                recurrence: object('Recurrence configuration patterns for repeating tasks', {
-                    'frequency!': string('How often the task repeats', {
+                recurrence: object({
+                    frequency: string('How often the task repeats', {
                         enum: ['daily', 'weekly', 'monthly', 'yearly']
                     }),
                     interval: integer('The interval sequence of the recurrence', {
                         minimum: 1
                     })
-                }),
+                }, 'Recurrence configuration patterns for repeating tasks'),
                 content: string('The detailed markdown or plaintext body content of the task'),
-                tagIds: array('Array of connected label or tag identifier strings', 'string', {
-                    uniqueItems: true
-                }),
-                childrenIds: array('Array of sub-task or dependent child identifier strings', 'string', {
-                    uniqueItems: true
-                })
-            })
+                tagIds: array('string', 'Array of connected label or tag identifier strings'),
+                childrenIds: array('string', 'Array of sub-task or dependent child identifier strings')
+            }, 'The data for task')
         },
-        async ({ id, userId, data }: { id: string; userId: string; data: TaskData }) => {
-            const task = await Task.findOneAndUpdate({ _id: id, userId }, data, { returnDocument: 'after' });
-
-            if (!task) throw new Error('Task not found');
+        async ({ id, userId, data }) => {
+            const task = await Task.update({ _id: id, userId }, data);
 
             return 'Updated ' + JSON.stringify(task.toJSON());
         }
     );
 
-    const deleteTask = new Tool(
+    const deleteTask = createTool<{ id: string; userId: string; }>(
         'deleteTask',
         'Deletes a task',
         {
-            'id!': string('The ID of the task'),
-            'userId!': string('The ID of the user')
+            id: string('The ID of the task'),
+            userId: string('The ID of the user')
         },
-        async ({ id, userId }: { id: string; userId: string; }) => {
-            const task = await Task.findOneAndDelete({ _id: id, userId }, { returnDocument: 'after' });
-
-            if (!task) throw new Error('Task not found');
+        async ({ id, userId }) => {
+            const task = await Task.delete({ _id: id, userId });
 
             return 'Deleted ' + JSON.stringify(task.toJSON());
         }
