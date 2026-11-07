@@ -74,8 +74,6 @@ describe('MCP Router', () => {
 
             const tools = response.result?.tools ?? [];
 
-            console.log(tools[5].inputSchema);
-
             expect(tools.map(tool => tool.name)).toEqual(expect.arrayContaining([
                 'countProjects',
                 'listProjects',
