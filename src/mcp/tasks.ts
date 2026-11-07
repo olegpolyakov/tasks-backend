@@ -1,5 +1,5 @@
 import type { TaskData } from '@olegpolyakov/tasks-core';
-import { createTool } from '@olegpolyakov/backend/mcp';
+import { createTextResult, createTool } from '@olegpolyakov/backend/mcp';
 import { array, boolean, integer, object, string } from '@olegpolyakov/core/utils/schema';
 
 import type { Context } from '@/context';
@@ -14,7 +14,7 @@ export default ({ models: { Task } }: Context) => {
         async ({ userId }) => {
             const count = await Task.countDocuments({ userId });
     
-            return String(count);
+            return createTextResult(String(count));
         }
     );
 
@@ -25,9 +25,9 @@ export default ({ models: { Task } }: Context) => {
             userId: string('The ID of the user')
         },
         async ({ userId }) => {
-            const tasks = await Task.find({ userId });
+            const tasks = await Task.find({ userId }, 'title completed important date');
     
-            return tasks.map(t => t.title).join(', ');
+            return createTextResult({ tasks });
         }
     );
 
@@ -46,7 +46,7 @@ export default ({ models: { Task } }: Context) => {
     
             if (!task) throw new Error('Task not found');
     
-            return JSON.stringify(task?.toJSON());
+            return createTextResult({ task });
         }
     );
             
@@ -59,8 +59,8 @@ export default ({ models: { Task } }: Context) => {
         },
         async ({ id, userId }) => {
             const task = await Task.get({ _id: id, userId });
-    
-            return JSON.stringify(task?.toJSON());
+
+            return createTextResult({ task });
         }
     );
 
@@ -74,7 +74,10 @@ export default ({ models: { Task } }: Context) => {
         async data => {
             const task = await Task.create(data);
             
-            return 'Created ' + JSON.stringify(task.toJSON());
+            return createTextResult({
+                id: task.id,
+                title: task.title
+            });
         }
     );
 
@@ -86,32 +89,42 @@ export default ({ models: { Task } }: Context) => {
         'updateTask',
         'Update a task',
         {
-            'id!': string('The ID of the task'),
-            'userId!': string('The ID of the user'),
-            'data!': object({
+            id: string('The ID of the task'),
+            userId: string('The ID of the user'),
+            data: object({
                 title: string('The title of the task'),
-                completed: boolean('The execution status of the task'),
-                important: boolean('Whether the task is marked as important or high priority'),
-                date: string('The deadline timestamp in ISO 8601 string format', {
+                'completed?': boolean('The execution status of the task'),
+                'important?': boolean('Whether the task is marked as important or high priority'),
+                'date?': string('The deadline timestamp in ISO 8601 string format', {
                     format: 'date-time'
                 }),
-                recurrence: object({
+                'recurrence?': object({
                     frequency: string('How often the task repeats', {
                         enum: ['daily', 'weekly', 'monthly', 'yearly']
                     }),
-                    interval: integer('The interval sequence of the recurrence', {
+                    'interval?': integer('The interval sequence of the recurrence', {
                         minimum: 1
                     })
                 }, 'Recurrence configuration patterns for repeating tasks'),
-                content: string('The detailed markdown or plaintext body content of the task'),
-                tagIds: array('string', 'Array of connected label or tag identifier strings'),
-                childrenIds: array('string', 'Array of sub-task or dependent child identifier strings')
+                'content?': string('The detailed markdown or plaintext body content of the task'),
+                'tagIds?': array('string', 'Array of connected label or tag identifier strings'),
+                'childrenIds?': array('string', 'Array of sub-task or dependent child identifier strings')
             }, 'The data for task')
         },
         async ({ id, userId, data }) => {
             const task = await Task.update({ _id: id, userId }, data);
 
-            return 'Updated ' + JSON.stringify(task.toJSON());
+            const fields = Object.keys(data);
+
+            const updated = Object.entries(task.toJSON()).reduce((data, [key, value]) => {
+                if (fields.includes(key)) {
+                    data[key] = value;
+                }
+
+                return data;
+            }, { id: task.id } as Record<string, unknown>);
+
+            return createTextResult({ task: updated });
         }
     );
 
@@ -125,7 +138,7 @@ export default ({ models: { Task } }: Context) => {
         async ({ id, userId }) => {
             const task = await Task.delete({ _id: id, userId });
 
-            return 'Deleted ' + JSON.stringify(task.toJSON());
+            return createTextResult({ task });
         }
     );
 

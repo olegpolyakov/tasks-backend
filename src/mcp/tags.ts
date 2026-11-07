@@ -1,5 +1,5 @@
 import type { TagData } from '@olegpolyakov/tasks-core';
-import { createTool } from '@olegpolyakov/backend/mcp';
+import { createTextResult, createTool } from '@olegpolyakov/backend/mcp';
 import { object, string } from '@olegpolyakov/core/utils/schema';
 
 import type { Context } from '@/context';
@@ -14,7 +14,7 @@ export default ({ models: { Tag, Task } }: Context) => {
         async ({ userId }) => {
             const count = await Tag.countDocuments({ userId });
 
-            return String(count);
+            return createTextResult(String(count));
         }
     );
 
@@ -27,7 +27,7 @@ export default ({ models: { Tag, Task } }: Context) => {
         async ({ userId }) => {
             const tags = await Tag.find({ userId });
 
-            return tags.map(tag => tag.name).join(', ');
+            return createTextResult({ tags });
         }
     );
 
@@ -46,7 +46,7 @@ export default ({ models: { Tag, Task } }: Context) => {
 
             if (!tag) throw new Error('Tag not found');
 
-            return JSON.stringify(tag.toJSON());
+            return createTextResult({ tag });
         }
     );
 
@@ -60,7 +60,7 @@ export default ({ models: { Tag, Task } }: Context) => {
         async ({ id, userId }) => {
             const tag = await Tag.get({ _id: id, userId });
 
-            return JSON.stringify(tag.toJSON());
+            return createTextResult({ tag });
         }
     );
 
@@ -74,7 +74,7 @@ export default ({ models: { Tag, Task } }: Context) => {
         async ({ userId, ...data }) => {
             const tag = await Tag.create({ ...data, userId });
 
-            return 'Created ' + JSON.stringify(tag.toJSON());
+            return createTextResult({ tag });
         }
     );
 
@@ -96,7 +96,7 @@ export default ({ models: { Tag, Task } }: Context) => {
         async ({ id, userId, data }) => {
             const tag = await Tag.update({ _id: id, userId }, data);
 
-            return 'Updated ' + JSON.stringify(tag.toJSON());
+            return createTextResult({ tag });
         }
     );
 
@@ -117,7 +117,7 @@ export default ({ models: { Tag, Task } }: Context) => {
                 $pull: { tagIds: id }
             });
 
-            return 'Deleted ' + JSON.stringify(tag.toJSON());
+            return createTextResult({ tag });
         }
     );
 

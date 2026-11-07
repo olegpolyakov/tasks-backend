@@ -1,5 +1,5 @@
 import type { ProjectData } from '@olegpolyakov/tasks-core';
-import { createTool } from '@olegpolyakov/backend/mcp';
+import { createTextResult, createTool } from '@olegpolyakov/backend/mcp';
 import { array, boolean, object, string } from '@olegpolyakov/core/utils/schema';
 
 import type { Context } from '@/context';
@@ -14,7 +14,7 @@ export default ({ models: { Project, Task } }: Context) => {
         async ({ userId }) => {
             const count = await Project.countDocuments({ userId });
 
-            return String(count);
+            return createTextResult(String(count));
         }
     );
 
@@ -27,7 +27,7 @@ export default ({ models: { Project, Task } }: Context) => {
         async ({ userId }) => {
             const projects = await Project.find({ userId });
 
-            return projects.map(project => project.name).join(', ');
+            return createTextResult({ projects });
         }
     );
 
@@ -46,7 +46,7 @@ export default ({ models: { Project, Task } }: Context) => {
 
             if (!project) throw new Error('Project not found');
 
-            return JSON.stringify(project.toJSON());
+            return createTextResult({ project });
         }
     );
 
@@ -60,7 +60,7 @@ export default ({ models: { Project, Task } }: Context) => {
         async ({ id, userId }) => {
             const project = await Project.get({ _id: id, userId });
 
-            return JSON.stringify(project.toJSON());
+            return createTextResult({ project });
         }
     );
 
@@ -74,7 +74,7 @@ export default ({ models: { Project, Task } }: Context) => {
         async ({ userId, ...data }) => {
             const project = await Project.create({ ...data, userId });
 
-            return 'Created ' + JSON.stringify(project.toJSON());
+            return createTextResult({ project });
         }
     );
 
@@ -100,7 +100,7 @@ export default ({ models: { Project, Task } }: Context) => {
         async ({ id, userId, data }) => {
             const project = await Project.update({ _id: id, userId }, data);
 
-            return 'Updated ' + JSON.stringify(project.toJSON());
+            return createTextResult({ project });
         }
     );
 
@@ -130,7 +130,7 @@ export default ({ models: { Project, Task } }: Context) => {
                 }
             }
 
-            return 'Deleted ' + JSON.stringify(project.toJSON());
+            return createTextResult({ project });
         }
     );
 

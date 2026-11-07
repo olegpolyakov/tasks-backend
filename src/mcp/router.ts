@@ -41,12 +41,7 @@ export default (context: Context) => {
                     throw new Error('Tool userId must match the authenticated user');
                 }
 
-                return {
-                    content: [{
-                        type: 'text',
-                        text: await tool.call(args)
-                    }]
-                };
+                return await tool.call(args);
             });
         }
 
